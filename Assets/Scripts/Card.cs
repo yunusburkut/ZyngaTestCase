@@ -29,6 +29,7 @@ public class Card : MonoBehaviour
     {
         _cardData = cardData; 
         _image.sprite = sprite; 
+        
     }
 
     public CardData GetCardData()

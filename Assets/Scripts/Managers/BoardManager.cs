@@ -3,16 +3,23 @@ using UnityEngine.UI;
 
 public class BoardManager : MonoBehaviour
 {
-    [SerializeField] private Texture[] cardImages;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [SerializeField] private CardPool cardPool;
+    public static BoardManager Instance;
+
+    void Awake()
     {
-        
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    public void DoSomething()
     {
-        
+        Debug.Log("GameManager is doing something.");
     }
 }

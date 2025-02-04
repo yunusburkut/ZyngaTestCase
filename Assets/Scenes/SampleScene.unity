@@ -148,6 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1f6042ec741e2d47b8db77cc3e06ddb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cardImages: []
 --- !u!4 &174359818
 Transform:
   m_ObjectHideFlags: 0
@@ -609,6 +610,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1480841095
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1480841097}
+  - component: {fileID: 1480841096}
+  m_Layer: 0
+  m_Name: CardPool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1480841096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1480841095}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5587858dccac694da41f02570883660, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cardPrefab: {fileID: 2546842048019461126}
+  initialPoolSize: 20
+--- !u!4 &1480841097
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1480841095}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 118.90294, y: 209.75098, z: -16.902458}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1657872008
 GameObject:
   m_ObjectHideFlags: 0
@@ -825,15 +872,21 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 05783a5e85943864a93e36cdb4a813e5, type: 3}
+--- !u!1 &2546842048019461126 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3274168096554633779, guid: 05783a5e85943864a93e36cdb4a813e5, type: 3}
+  m_PrefabInstance: {fileID: 2546842048019461125}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 519420032}
   - {fileID: 619394802}
-  - {fileID: 2546842048019461125}
   - {fileID: 174359818}
   - {fileID: 973610157}
   - {fileID: 1048938442}
   - {fileID: 564863891}
   - {fileID: 1657872010}
+  - {fileID: 1480841097}
+  - {fileID: 2546842048019461125}
