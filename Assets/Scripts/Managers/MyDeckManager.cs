@@ -68,7 +68,6 @@ public class MyDeckManager : MonoBehaviour
     {
         myDeck.Sort(CompareBySuit);
         Debug.Log("Deste, suit'e göre sıralandı.");
-
         RepositionCards();
     }
 
@@ -80,16 +79,13 @@ public class MyDeckManager : MonoBehaviour
 
         for (int i = 0; i < cardCount; i++)
         {
-          
             RectTransform cardRect = myDeck[i].GetComponent<RectTransform>();
             if (cardRect == null)
             {
                 Debug.LogWarning("Kartın RectTransform'u bulunamadı!");
                 continue;
             }
-
             Vector2 targetPos = new Vector2(startX + i * 50, 0f);
-        
             cardRect.DOAnchorPos(targetPos, .5f).SetEase(Ease.OutQuad);
             cardRect.transform.SetSiblingIndex(i);
         }
