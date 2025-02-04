@@ -1,37 +1,55 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class CardPool : MonoBehaviour
 {
-    public GameObject cardPrefab;
-    public int initialPoolSize = 20;
-    
-    private Queue<GameObject> pool = new Queue<GameObject>();
+    [SerializeField] private GameObject cardPrefab;
+    [SerializeField] private int initialPoolSize = 20;
+
+    private Queue<Card> pool = new Queue<Card>();
 
     private void Awake()
     {
         for (int i = 0; i < initialPoolSize; i++)
         {
-            var cardObj = Instantiate(cardPrefab, transform);
-            cardObj.SetActive(false);
-            pool.Enqueue(cardObj);
+            GameObject cardObj = Instantiate(cardPrefab, transform);
+            cardObj.SetActive(false); 
+            Card cardComponent = cardObj.GetComponent<Card>();
+            
+            if (cardComponent == null)
+            {
+                Debug.LogError("cardPrefab, Card component içermiyor!");
+            }
+            
+            pool.Enqueue(cardComponent); 
         }
     }
 
-    public GameObject GetCard()
+    public Card GetCard()
     {
+        Card card;
+
         if (pool.Count > 0)
         {
-            var cardObj = pool.Dequeue();
-            cardObj.SetActive(true);
-            return cardObj;
+            card = pool.Dequeue();
         }
-        return Instantiate(cardPrefab, transform);
-    }
+        else
+        {
+            GameObject cardObj = Instantiate(cardPrefab, transform);
+            card = cardObj.GetComponent<Card>();
 
-    public void ReturnCard(GameObject cardObj)
+            if (card == null)
+            {
+                Debug.LogError("cardPrefab, Card component içermiyor!");
+            }
+        }
+        card.gameObject.SetActive(true); 
+        return card;
+    }
+    
+    public void ReturnCard(Card card)
     {
-        cardObj.SetActive(false);
-        pool.Enqueue(cardObj);
+        card.gameObject.SetActive(false);
+        pool.Enqueue(card);
     }
 }
