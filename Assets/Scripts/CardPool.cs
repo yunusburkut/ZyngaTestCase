@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class CardPool : MonoBehaviour
 {
     [SerializeField] private GameObject cardPrefab;
-    [SerializeField] private int initialPoolSize = 20;
+    [SerializeField] private int initialPoolSize;
 
     private Queue<Card> pool = new Queue<Card>();
 

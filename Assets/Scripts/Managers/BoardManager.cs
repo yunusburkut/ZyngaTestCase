@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 public class BoardManager : MonoBehaviour
@@ -7,8 +8,9 @@ public class BoardManager : MonoBehaviour
     private List<Card> deckList = new List<Card>();
     [SerializeField] private CardPool cardPool;
     [SerializeField] private Sprite[] cardSprites;
+    [SerializeField] private RectTransform destinationPanel;
+    
     public static BoardManager Instance;
-
     void Awake()
     {
         if (Instance == null)
@@ -60,6 +62,17 @@ public class BoardManager : MonoBehaviour
             Debug.LogWarning("Deste bitti!");
             return null;
         }
+        
+        Card card = deckStack.Pop();
+        SendDrawedCardToDeck(card);
+        MyDeckManager.Instance.AddCard(card);
         return deckStack.Pop(); // O(1) performans
+    }
+
+    public void SendDrawedCardToDeck(Card card)
+    {
+        RectTransform cardRect = card.GetComponent<RectTransform>();
+        cardRect.SetParent(destinationPanel, false);
+        cardRect.DOAnchorPos(Vector2.zero, .5f).SetEase(Ease.OutQuad);
     }
 }
