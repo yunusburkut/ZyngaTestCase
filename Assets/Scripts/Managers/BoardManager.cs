@@ -7,7 +7,19 @@ public class BoardManager : MonoBehaviour
     private List<Card> deckList = new List<Card>();
     [SerializeField] private CardPool cardPool;
     [SerializeField] private Sprite[] cardSprites;
+    public static BoardManager Instance;
 
+    void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
     private void Start()
     {
         CreateAndShuffleDeck();
