@@ -4,13 +4,13 @@ using UnityEngine.UI;
 public struct CardData
 {
     public byte Number;
-    public byte CardType;
+    public byte Suit;
     public byte GroupID;
     
-    public CardData(byte number, byte cardType, byte groupID)
+    public CardData(byte number, byte suit, byte groupID)
     {
         Number = number;
-        CardType = cardType;
+        Suit = suit;
         GroupID = groupID;
     }
 }
