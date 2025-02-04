@@ -62,7 +62,6 @@ public class BoardManager : MonoBehaviour
             Debug.LogWarning("Deste bitti!");
             return null;
         }
-        
         Card card = deckStack.Pop();
         SendDrawedCardToDeck(card);
         MyDeckManager.Instance.AddCard(card);

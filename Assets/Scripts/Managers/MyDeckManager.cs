@@ -47,9 +47,7 @@ public class MyDeckManager : MonoBehaviour
             RectTransform rt = myDeck[i].GetComponent<RectTransform>();
             if (rt != null)
             {
-
                 Vector2 targetPos = new Vector2(startX + i * cardSpacing, 0);
-
                 rt.DOAnchorPos(targetPos, shiftDuration).SetEase(Ease.OutQuad);
             }
             else
