@@ -1,9 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
+using DG.Tweening;
 
 public class MyDeckManager : MonoBehaviour
 {
     [SerializeField] private List<Card> myDeck = new List<Card>();
+    [SerializeField] private float cardSpacing = 30f;
+    [SerializeField] private float shiftDuration = 0.5f;
     
     public static MyDeckManager Instance;
     void Awake()
@@ -24,10 +27,35 @@ public class MyDeckManager : MonoBehaviour
             myDeck.Add(card);
             Debug.Log("Kart eklendi: Number=" + card.GetCardData().Number +
                       ", Suit=" + card.GetCardData().Suit);
+            UpdateDeckLayout();
         }
         else
         {
             Debug.LogWarning("Eklenmeye çalışılan kart null!");
+        }
+    }
+
+    public void UpdateDeckLayout()
+    {
+        int n = myDeck.Count;
+        if (n == 0) return;
+
+        float startX = -((n - 1) * cardSpacing) / 2f;
+
+        for (int i = 0; i < n; i++)
+        {
+            RectTransform rt = myDeck[i].GetComponent<RectTransform>();
+            if (rt != null)
+            {
+
+                Vector2 targetPos = new Vector2(startX + i * cardSpacing, 0);
+
+                rt.DOAnchorPos(targetPos, shiftDuration).SetEase(Ease.OutQuad);
+            }
+            else
+            {
+                Debug.LogWarning("Kartın RectTransform'u bulunamadı!");
+            }
         }
     }
 
