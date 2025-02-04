@@ -57,31 +57,54 @@ public class MyDeckManager : MonoBehaviour
         }
     }
 
-    public void SortDeckByNumber()
+    public void SortAndRepositionDeckByNumber()
     {
-        myDeck.Sort((cardA, cardB) => cardA.GetCardData().Number.CompareTo(cardB.GetCardData().Number));
+        myDeck.Sort(CompareByNumber);
         Debug.Log("Deste, numaraya göre sıralandı.");
+        RepositionCards();
     }
 
-    public void SortDeckBySuit()
+    public void SortAndRepositionDeckBySuit()
     {
-        myDeck.Sort((cardA, cardB) => cardA.GetCardData().Suit.CompareTo(cardB.GetCardData().Suit));
+        myDeck.Sort(CompareBySuit);
         Debug.Log("Deste, suit'e göre sıralandı.");
+
+        RepositionCards();
     }
 
-    public void SwapCards(int indexA, int indexB)
+    private void RepositionCards()
     {
-        if (indexA >= 0 && indexA < myDeck.Count && indexB >= 0 && indexB < myDeck.Count)
+        int cardCount = myDeck.Count;
+       
+        float startX = -((cardCount - 1) * 50) / 2f;
+
+        for (int i = 0; i < cardCount; i++)
         {
-            (myDeck[indexA], myDeck[indexB]) = (myDeck[indexB], myDeck[indexA]);
-            Debug.Log("Kartlar yer değiştirdi: " + indexA + " ile " + indexB);
-        }
-        else
-        {
-            Debug.LogWarning("Swap işlemi için geçersiz indeksler!");
+          
+            RectTransform cardRect = myDeck[i].GetComponent<RectTransform>();
+            if (cardRect == null)
+            {
+                Debug.LogWarning("Kartın RectTransform'u bulunamadı!");
+                continue;
+            }
+
+            Vector2 targetPos = new Vector2(startX + i * 50, 0f);
+        
+            cardRect.DOAnchorPos(targetPos, .5f).SetEase(Ease.OutQuad);
+            cardRect.transform.SetSiblingIndex(i);
         }
     }
 
+    
+    private int CompareByNumber(Card cardA, Card cardB)
+    {
+        return cardA.GetCardData().Number.CompareTo(cardB.GetCardData().Number);
+    }
+
+    private int CompareBySuit(Card cardA, Card cardB)
+    {
+        return cardA.GetCardData().Suit.CompareTo(cardB.GetCardData().Suit);
+    }
     public void LogDeck()
     {
         string deckInfo = "MyDeck: ";
