@@ -32,8 +32,37 @@ public class Card : MonoBehaviour
         
     }
 
+    public void SetGroupID(byte groupID)
+    {
+        _cardData.GroupID = groupID;
+        if (groupID==1)
+        {
+            _image.color = Color.green;
+        }
+        else if (groupID == 2)
+        {
+            _image.color = Color.red;
+        }
+        else if (groupID == 3)
+        {
+            _image.color = Color.blue;
+        }
+        else if (groupID == 4)
+        {
+            _image.color = Color.cyan;
+        }
+        else if (groupID == 0)
+        {
+            _image.color = Color.white;
+        }
+    }
     public CardData GetCardData()
     {
         return _cardData;
+    }
+
+    public void setCardData(CardData cardData)
+    {
+        _cardData = cardData;
     }
 }
