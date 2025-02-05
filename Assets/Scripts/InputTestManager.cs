@@ -21,7 +21,7 @@ public class InputTestManager : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.E))
         {
-            GROUP();
+            SmartSort();
         }
     }
 
@@ -37,9 +37,9 @@ public class InputTestManager : MonoBehaviour
     {
        MyDeckManager.Instance.SortAndRepositionDeckByNumberThenSuitAscending();
     }
-    private void GROUP()
+    private void SmartSort()
     {
-      
+        MyDeckManager.Instance.SortAndRepositionDeckByNumberThenSuitAscending();
     }
     private void DrawAndLogCard()
     {
