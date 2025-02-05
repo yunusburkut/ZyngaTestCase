@@ -167,19 +167,20 @@ public class MyDeckManager : MonoBehaviour
         }
         UpdateUngroupedCards();
     }
-    
     private void UpdateUngroupedCards()
     {
         ungroupedCards.Clear();
         int n = myDeck.Count;
+        int totalPoints = 0;
         for (int idx = 0; idx < n; idx++)
         {
             if (myDeck[idx].GetCardData().GroupID == 0)
             {
                 ungroupedCards.Add(myDeck[idx]);
+                totalPoints += myDeck[idx].GetPoint(); //puan hesapla
             }
         }
-        Debug.Log($"Ungrouped Cards güncellendi: {ungroupedCards.Count} kart bulunuyor.");
+        Debug.Log($"Ungrouped Cards güncellendi: {ungroupedCards.Count} kart bulunuyor. Toplam puan: {totalPoints}");
     }
 
     public void LogDeck()
