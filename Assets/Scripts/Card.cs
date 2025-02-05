@@ -32,6 +32,17 @@ public class Card : MonoBehaviour
         
     }
 
+    public byte GetPoint()
+    {
+        if (_cardData.Number>10)
+        {
+            return 10;
+        }
+        else
+        {
+            return _cardData.Number;
+        }
+    }
     public void SetGroupID(byte groupID)
     {
         _cardData.GroupID = groupID;

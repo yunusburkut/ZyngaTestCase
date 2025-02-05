@@ -72,9 +72,7 @@ public class MyDeckManager : MonoBehaviour
     {
         myDeck.Sort(CompareByNumberThenSuitAscending);
         Debug.Log("Deck, number'a göre ve eşit sayılar suit'e göre sıralandı.");
-
         MarkGroups();
-
         RepositionCards();
     }
 
@@ -120,13 +118,11 @@ public class MyDeckManager : MonoBehaviour
         {
             myDeck[idx].SetGroupID(0);
         }
-
         int i = 0;
         byte groupId = 1; // Grup ID başlangıcı
 
         while (i < n)
         {
-            bool grouped = false;
             if (i < n - 1 && myDeck[i].GetCardData().Suit == myDeck[i + 1].GetCardData().Suit)
             {
                 int chainLength = 1;
@@ -145,10 +141,9 @@ public class MyDeckManager : MonoBehaviour
                     Debug.Log($"Suit grubu: Suit {myDeck[i].GetCardData().Suit}, başlangıç numarası {myDeck[i].GetCardData().Number}, zincir uzunluğu {chainLength} -> GroupID: {groupId}");
                     groupId++;
                     i += chainLength;
-                    grouped = true;
                 }
             }
-            if (!grouped && i < n - 1 && myDeck[i].GetCardData().Number == myDeck[i + 1].GetCardData().Number)
+            if (myDeck[i].GetCardData().GroupID==0 && i < n - 1 && myDeck[i].GetCardData().Number == myDeck[i + 1].GetCardData().Number)
             {
                 int chainLength = 1;
                 while (i + chainLength < n &&
