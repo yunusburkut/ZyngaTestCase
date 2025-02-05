@@ -9,7 +9,7 @@ public class MyDeckManager : MonoBehaviour
     [SerializeField] private float shiftDuration = 0.5f;
     [SerializeField] private float spacing = 50;
     [SerializeField] private float moveDuration = 0.5f;
-   // private List<int> chainIndices = new List<int>(10); //doldur boşalt array'i
+   //private List<int> chainIndices = new List<int>(10); //doldur boşalt array'i
     private List<Card> ungroupedCards = new List<Card>();
 
     public static MyDeckManager Instance;
