@@ -72,9 +72,7 @@ public class MyDeckManager : MonoBehaviour
     {
         myDeck.Sort(CompareByNumberThenSuitAscending);
         Debug.Log("Deck, number'a göre ve eşit sayılar suit'e göre sıralandı.");
-
         MarkGroups();
-
         RepositionCards();
     }
 
