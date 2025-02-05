@@ -143,7 +143,7 @@ public class MyDeckManager : MonoBehaviour
                     i += chainLength;
                 }
             }
-            if (myDeck[i].GetCardData().GroupID==0 && i < n - 1 && myDeck[i].GetCardData().Number == myDeck[i + 1].GetCardData().Number)
+            if (myDeck[i].GetCardData().GroupID==0 && i < n - 1 && myDeck[i].GetCardData().Number == myDeck[i + 1].GetCardData().Number)//bool silip group id sıfır sa grupta değil check'i 
             {
                 int chainLength = 1;
                 while (i + chainLength < n &&
