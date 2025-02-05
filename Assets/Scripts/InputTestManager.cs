@@ -6,7 +6,7 @@ public class InputTestManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 2; i++)
             {
                 DrawAndLogCard();
             }
@@ -39,7 +39,7 @@ public class InputTestManager : MonoBehaviour
     }
     private void GROUP()
     {
-        MyDeckManager.Instance.MarkGroups();
+      
     }
     private void DrawAndLogCard()
     {

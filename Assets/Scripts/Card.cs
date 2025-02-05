@@ -62,6 +62,22 @@ public class Card : MonoBehaviour
         {
             _image.color = Color.cyan;
         }
+        else if (groupID == 5)
+        {
+            _image.color = Color.magenta;
+        }
+        else if (groupID == 6)
+        {
+            _image.color = Color.yellow;
+        }
+        else if (groupID == 7)
+        {
+            _image.color = Color.gray;
+        }
+        else if (groupID == 8)
+        {
+            _image.color = Color.black;
+        }
         else if (groupID == 0)
         {
             _image.color = Color.white;

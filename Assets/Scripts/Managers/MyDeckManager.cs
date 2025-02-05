@@ -72,29 +72,14 @@ public class MyDeckManager : MonoBehaviour
     {
         myDeck.Sort(CompareByNumberThenSuitAscending);
         Debug.Log("Deck, number'a göre ve eşit sayılar suit'e göre sıralandı.");
+
         MarkGroups();
+
         RepositionCards();
     }
 
     private void RepositionCards()
     {
-        List<Card> groupedCards = new List<Card>();
-        List<Card> ungroupedCardsLocal = new List<Card>();
-
-        foreach (Card card in myDeck)
-        {
-            if (card.GetCardData().GroupID != 0)
-                groupedCards.Add(card);
-            else
-                ungroupedCardsLocal.Add(card);
-        }
-
-        groupedCards.Sort((a, b) => a.GetCardData().GroupID.CompareTo(b.GetCardData().GroupID));
-
-        myDeck.Clear();
-        myDeck.AddRange(groupedCards);
-        myDeck.AddRange(ungroupedCardsLocal);
-
         int cardCount = myDeck.Count;
         float startX = -((cardCount - 1) * spacing) / 2f;
 
@@ -112,7 +97,6 @@ public class MyDeckManager : MonoBehaviour
             cardRect.transform.SetSiblingIndex(i);
         }
     }
-
  
     private int CompareBySuitThenNumberAscending(Card cardA, Card cardB)
     {
@@ -136,6 +120,7 @@ public class MyDeckManager : MonoBehaviour
         {
             myDeck[idx].SetGroupID(0);
         }
+
         int i = 0;
         byte groupId = 1; // Grup ID başlangıcı
 
@@ -163,7 +148,7 @@ public class MyDeckManager : MonoBehaviour
                     grouped = true;
                 }
             }
-            if (!grouped && i < n - 1 && myDeck[i].GetCardData().Number == myDeck[i + 1].GetCardData().Number)//bool silip group id sıfır sa grupta değil check'i 
+            if (!grouped && i < n - 1 && myDeck[i].GetCardData().Number == myDeck[i + 1].GetCardData().Number)
             {
                 int chainLength = 1;
                 while (i + chainLength < n &&
@@ -187,21 +172,21 @@ public class MyDeckManager : MonoBehaviour
         }
         UpdateUngroupedCards();
     }
+    
     private void UpdateUngroupedCards()
     {
         ungroupedCards.Clear();
         int n = myDeck.Count;
-        int totalPoints = 0;
         for (int idx = 0; idx < n; idx++)
         {
             if (myDeck[idx].GetCardData().GroupID == 0)
             {
                 ungroupedCards.Add(myDeck[idx]);
-                totalPoints += myDeck[idx].GetPoint(); //puan hesapla
             }
         }
-        Debug.Log($"Ungrouped Cards güncellendi: {ungroupedCards.Count} kart bulunuyor. Toplam puan: {totalPoints}");
+        Debug.Log($"Ungrouped Cards güncellendi: {ungroupedCards.Count} kart bulunuyor.");
     }
+
     public void LogDeck()
     {
         string deckInfo = "MyDeck: ";
