@@ -78,6 +78,23 @@ public class MyDeckManager : MonoBehaviour
 
     private void RepositionCards()
     {
+        List<Card> groupedCards = new List<Card>();
+        List<Card> ungroupedCardsLocal = new List<Card>();
+
+        foreach (Card card in myDeck)
+        {
+            if (card.GetCardData().GroupID != 0)
+                groupedCards.Add(card);
+            else
+                ungroupedCardsLocal.Add(card);
+        }
+
+        groupedCards.Sort((a, b) => a.GetCardData().GroupID.CompareTo(b.GetCardData().GroupID));
+
+        myDeck.Clear();
+        myDeck.AddRange(groupedCards);
+        myDeck.AddRange(ungroupedCardsLocal);
+
         int cardCount = myDeck.Count;
         float startX = -((cardCount - 1) * spacing) / 2f;
 
@@ -95,6 +112,7 @@ public class MyDeckManager : MonoBehaviour
             cardRect.transform.SetSiblingIndex(i);
         }
     }
+
  
     private int CompareBySuitThenNumberAscending(Card cardA, Card cardB)
     {
@@ -123,6 +141,7 @@ public class MyDeckManager : MonoBehaviour
 
         while (i < n)
         {
+            bool grouped = false;
             if (i < n - 1 && myDeck[i].GetCardData().Suit == myDeck[i + 1].GetCardData().Suit)
             {
                 int chainLength = 1;
@@ -141,9 +160,10 @@ public class MyDeckManager : MonoBehaviour
                     Debug.Log($"Suit grubu: Suit {myDeck[i].GetCardData().Suit}, başlangıç numarası {myDeck[i].GetCardData().Number}, zincir uzunluğu {chainLength} -> GroupID: {groupId}");
                     groupId++;
                     i += chainLength;
+                    grouped = true;
                 }
             }
-            if (myDeck[i].GetCardData().GroupID==0 && i < n - 1 && myDeck[i].GetCardData().Number == myDeck[i + 1].GetCardData().Number)//bool silip group id sıfır sa grupta değil check'i 
+            if (!grouped && i < n - 1 && myDeck[i].GetCardData().Number == myDeck[i + 1].GetCardData().Number)//bool silip group id sıfır sa grupta değil check'i 
             {
                 int chainLength = 1;
                 while (i + chainLength < n &&
@@ -182,7 +202,6 @@ public class MyDeckManager : MonoBehaviour
         }
         Debug.Log($"Ungrouped Cards güncellendi: {ungroupedCards.Count} kart bulunuyor. Toplam puan: {totalPoints}");
     }
-
     public void LogDeck()
     {
         string deckInfo = "MyDeck: ";
