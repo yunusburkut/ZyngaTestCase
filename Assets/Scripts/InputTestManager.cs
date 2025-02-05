@@ -6,7 +6,10 @@ public class InputTestManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            DrawAndLogCard();
+            for (int i = 0; i < 10; i++)
+            {
+                DrawAndLogCard();
+            }
         }
         if (Input.GetKeyDown(KeyCode.Q))
         {
@@ -24,14 +27,15 @@ public class InputTestManager : MonoBehaviour
     }
     private void SuitSortTest()
     {
-        MyDeckManager.Instance.SortAndRepositionDeckBySuit();
+        MyDeckManager.Instance.SortAndRepositionDeckBySuitAscending();
     }
     private void NumberSortTest()
     {
-        MyDeckManager.Instance.SortAndRepositionDeckByNumber();
+       //MyDeckManager.Instance.SortAndRepositionDeckByNumber();
     }
     private void DrawAndLogCard()
     {
        BoardManager.Instance.DrawCard();
+       
     }
 }

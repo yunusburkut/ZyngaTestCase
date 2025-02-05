@@ -7,6 +7,8 @@ public class MyDeckManager : MonoBehaviour
     [SerializeField] private List<Card> myDeck = new List<Card>();
     [SerializeField] private float cardSpacing = 30f;
     [SerializeField] private float shiftDuration = 0.5f;
+    [SerializeField] private float spacing = 50;
+    [SerializeField] private float moveDuration = 0.5f;
     
     public static MyDeckManager Instance;
     void Awake()
@@ -57,50 +59,93 @@ public class MyDeckManager : MonoBehaviour
         }
     }
 
-    public void SortAndRepositionDeckByNumber()
+    public void SortAndRepositionDeckBySuitAscending()
     {
-        myDeck.Sort(CompareByNumber);
-        Debug.Log("Deste, numaraya göre sıralandı.");
+        myDeck.Sort(CompareBySuitThenNumberAscending);
+        Debug.Log("Deck, Suit'e göre ve aynı suit içinde küçükten büyüğe sıralandı.");
+        MarkConsecutiveGroupsBySuitAscending();
         RepositionCards();
     }
 
-    public void SortAndRepositionDeckBySuit()
+    private int CompareBySuitThenNumberAscending(Card cardA, Card cardB)
     {
-        myDeck.Sort(CompareBySuit);
-        Debug.Log("Deste, suit'e göre sıralandı.");
-        RepositionCards();
+        int suitDiff = cardA.GetCardData().Suit - cardB.GetCardData().Suit;
+        if (suitDiff != 0)
+            return suitDiff;
+        return cardA.GetCardData().Number - cardB.GetCardData().Number;
+    }
+
+    private void MarkConsecutiveGroupsBySuitAscending()
+    {
+        int n = myDeck.Count;
+        int i = 0;
+        byte groupId = 1; 
+
+        while (i < n)
+        {
+            int currentSuit = myDeck[i].GetCardData().Suit;
+            int j = i;
+            while (j < n && myDeck[j].GetCardData().Suit == currentSuit)
+            {
+                j++;
+            }
+            int chainStart = i;  
+            int chainLength = 1; 
+            for (int k = i + 1; k < j; k++)
+            {
+                if (myDeck[k].GetCardData().Number == myDeck[k - 1].GetCardData().Number + 1)
+                {
+                    chainLength++;
+                }
+                else
+                {
+                    if (chainLength >= 3)
+                    {
+                        for (int idx = chainStart; idx < chainStart + chainLength; idx++)
+                        {
+                            myDeck[idx].SetGroupID(groupId);
+                        }
+                        Debug.Log($"Suit {currentSuit} için ardışık grup (ilk numara: {myDeck[chainStart].GetCardData().Number}) GroupID: {groupId} atandı.");
+                        groupId++; 
+                    }
+                    chainStart = k;
+                    chainLength = 1;
+                }
+            }
+            if (chainLength >= 3)
+            {
+                for (int idx = chainStart; idx < chainStart + chainLength; idx++)
+                {
+                    myDeck[idx].SetGroupID(groupId);
+                }
+                Debug.Log($"Suit {currentSuit} için ardışık grup (ilk numara: {myDeck[chainStart].GetCardData().Number}) GroupID: {groupId} atandı.");
+                groupId++;
+            }
+            i = j;
+        }
     }
 
     private void RepositionCards()
     {
         int cardCount = myDeck.Count;
-       
-        float startX = -((cardCount - 1) * 50) / 2f;
+        float startX = -((cardCount - 1) * spacing) / 2f;
 
         for (int i = 0; i < cardCount; i++)
         {
+            
             RectTransform cardRect = myDeck[i].GetComponent<RectTransform>();
             if (cardRect == null)
             {
                 Debug.LogWarning("Kartın RectTransform'u bulunamadı!");
                 continue;
             }
-            Vector2 targetPos = new Vector2(startX + i * 50, 0f);
-            cardRect.DOAnchorPos(targetPos, .5f).SetEase(Ease.OutQuad);
+
+            Vector2 targetPos = new Vector2(startX + i * spacing, 0f);
+            cardRect.DOAnchorPos(targetPos, moveDuration).SetEase(Ease.OutQuad);
             cardRect.transform.SetSiblingIndex(i);
         }
     }
 
-    
-    private int CompareByNumber(Card cardA, Card cardB)
-    {
-        return cardA.GetCardData().Number.CompareTo(cardB.GetCardData().Number);
-    }
-
-    private int CompareBySuit(Card cardA, Card cardB)
-    {
-        return cardA.GetCardData().Suit.CompareTo(cardB.GetCardData().Suit);
-    }
     public void LogDeck()
     {
         string deckInfo = "MyDeck: ";

@@ -55,17 +55,15 @@ public class BoardManager : MonoBehaviour
         deckList.Clear();
     }
 
-    public Card DrawCard()
+    public void DrawCard()
     {
         if (deckStack.Count == 0)
         {
             Debug.LogWarning("Deste bitti!");
-            return null;
         }
         Card card = deckStack.Pop();
         SendDrawedCardToDeck(card);
         MyDeckManager.Instance.AddCard(card);
-        return deckStack.Pop(); // O(1) performans
     }
 
     public void SendDrawedCardToDeck(Card card)
