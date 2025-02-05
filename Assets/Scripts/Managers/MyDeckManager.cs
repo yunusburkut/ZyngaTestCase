@@ -9,7 +9,9 @@ public class MyDeckManager : MonoBehaviour
     [SerializeField] private float shiftDuration = 0.5f;
     [SerializeField] private float spacing = 50;
     [SerializeField] private float moveDuration = 0.5f;
-    
+   // private List<int> chainIndices = new List<int>(10); //doldur boşalt array'i
+    private List<Card> ungroupedCards = new List<Card>();
+
     public static MyDeckManager Instance;
     void Awake()
     {
@@ -58,71 +60,22 @@ public class MyDeckManager : MonoBehaviour
             }
         }
     }
-
     public void SortAndRepositionDeckBySuitAscending()
     {
         myDeck.Sort(CompareBySuitThenNumberAscending);
-        Debug.Log("Deck, Suit'e göre ve aynı suit içinde küçükten büyüğe sıralandı.");
-        MarkConsecutiveGroupsBySuitAscending();
+        Debug.Log("Deck, suit'e göre ve aynı suit içinde küçükten büyüğe sıralandı.");
+        MarkGroups();
         RepositionCards();
     }
 
-    private int CompareBySuitThenNumberAscending(Card cardA, Card cardB)
+    public void SortAndRepositionDeckByNumberThenSuitAscending()
     {
-        int suitDiff = cardA.GetCardData().Suit - cardB.GetCardData().Suit;
-        if (suitDiff != 0)
-            return suitDiff;
-        return cardA.GetCardData().Number - cardB.GetCardData().Number;
-    }
+        myDeck.Sort(CompareByNumberThenSuitAscending);
+        Debug.Log("Deck, number'a göre ve eşit sayılar suit'e göre sıralandı.");
 
-    private void MarkConsecutiveGroupsBySuitAscending()
-    {
-        int n = myDeck.Count;
-        int i = 0;
-        byte groupId = 1; 
+        MarkGroups();
 
-        while (i < n)
-        {
-            int currentSuit = myDeck[i].GetCardData().Suit;
-            int j = i;
-            while (j < n && myDeck[j].GetCardData().Suit == currentSuit)
-            {
-                j++;
-            }
-            int chainStart = i;  
-            int chainLength = 1; 
-            for (int k = i + 1; k < j; k++)
-            {
-                if (myDeck[k].GetCardData().Number == myDeck[k - 1].GetCardData().Number + 1)
-                {
-                    chainLength++;
-                }
-                else
-                {
-                    if (chainLength >= 3)
-                    {
-                        for (int idx = chainStart; idx < chainStart + chainLength; idx++)
-                        {
-                            myDeck[idx].SetGroupID(groupId);
-                        }
-                        Debug.Log($"Suit {currentSuit} için ardışık grup (ilk numara: {myDeck[chainStart].GetCardData().Number}) GroupID: {groupId} atandı.");
-                        groupId++; 
-                    }
-                    chainStart = k;
-                    chainLength = 1;
-                }
-            }
-            if (chainLength >= 3)
-            {
-                for (int idx = chainStart; idx < chainStart + chainLength; idx++)
-                {
-                    myDeck[idx].SetGroupID(groupId);
-                }
-                Debug.Log($"Suit {currentSuit} için ardışık grup (ilk numara: {myDeck[chainStart].GetCardData().Number}) GroupID: {groupId} atandı.");
-                groupId++;
-            }
-            i = j;
-        }
+        RepositionCards();
     }
 
     private void RepositionCards()
@@ -132,7 +85,6 @@ public class MyDeckManager : MonoBehaviour
 
         for (int i = 0; i < cardCount; i++)
         {
-            
             RectTransform cardRect = myDeck[i].GetComponent<RectTransform>();
             if (cardRect == null)
             {
@@ -144,6 +96,95 @@ public class MyDeckManager : MonoBehaviour
             cardRect.DOAnchorPos(targetPos, moveDuration).SetEase(Ease.OutQuad);
             cardRect.transform.SetSiblingIndex(i);
         }
+    }
+ 
+    private int CompareBySuitThenNumberAscending(Card cardA, Card cardB)
+    {
+        int suitDiff = cardA.GetCardData().Suit - cardB.GetCardData().Suit;
+        if (suitDiff != 0)
+            return suitDiff;
+        return cardA.GetCardData().Number - cardB.GetCardData().Number;
+    }
+    private int CompareByNumberThenSuitAscending(Card cardA, Card cardB)
+    {
+        int diff = cardA.GetCardData().Number - cardB.GetCardData().Number;
+        if (diff != 0)
+            return diff;
+        return cardA.GetCardData().Suit - cardB.GetCardData().Suit;
+    }
+  
+    public void MarkGroups()
+    {
+        int n = myDeck.Count;
+        for (int idx = 0; idx < n; idx++)
+        {
+            myDeck[idx].SetGroupID(0);
+        }
+
+        int i = 0;
+        byte groupId = 1; // Grup ID başlangıcı
+
+        while (i < n)
+        {
+            bool grouped = false;
+            if (i < n - 1 && myDeck[i].GetCardData().Suit == myDeck[i + 1].GetCardData().Suit)
+            {
+                int chainLength = 1;
+                while (i + chainLength < n &&
+                       myDeck[i + chainLength].GetCardData().Suit == myDeck[i].GetCardData().Suit &&
+                       myDeck[i + chainLength].GetCardData().Number == myDeck[i + chainLength - 1].GetCardData().Number + 1)
+                {
+                    chainLength++;
+                }
+                if (chainLength >= 3)
+                {
+                    for (int k = i; k < i + chainLength; k++)
+                    {
+                        myDeck[k].SetGroupID(groupId);
+                    }
+                    Debug.Log($"Suit grubu: Suit {myDeck[i].GetCardData().Suit}, başlangıç numarası {myDeck[i].GetCardData().Number}, zincir uzunluğu {chainLength} -> GroupID: {groupId}");
+                    groupId++;
+                    i += chainLength;
+                    grouped = true;
+                }
+            }
+            if (!grouped && i < n - 1 && myDeck[i].GetCardData().Number == myDeck[i + 1].GetCardData().Number)
+            {
+                int chainLength = 1;
+                while (i + chainLength < n &&
+                       myDeck[i + chainLength].GetCardData().Number == myDeck[i].GetCardData().Number)
+                {
+                    chainLength++;
+                }
+                if (chainLength >= 3)
+                {
+                    for (int k = i; k < i + chainLength; k++)
+                    {
+                        myDeck[k].SetGroupID(groupId);
+                    }
+                    Debug.Log($"Number grubu: Number {myDeck[i].GetCardData().Number}, zincir uzunluğu {chainLength} -> GroupID: {groupId}");
+                    groupId++;
+                    i += chainLength;
+                    continue;
+                }
+            }
+            i++;
+        }
+        UpdateUngroupedCards();
+    }
+    
+    private void UpdateUngroupedCards()
+    {
+        ungroupedCards.Clear();
+        int n = myDeck.Count;
+        for (int idx = 0; idx < n; idx++)
+        {
+            if (myDeck[idx].GetCardData().GroupID == 0)
+            {
+                ungroupedCards.Add(myDeck[idx]);
+            }
+        }
+        Debug.Log($"Ungrouped Cards güncellendi: {ungroupedCards.Count} kart bulunuyor.");
     }
 
     public void LogDeck()

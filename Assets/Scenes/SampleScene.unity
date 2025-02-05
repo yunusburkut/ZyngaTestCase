@@ -786,6 +786,8 @@ MonoBehaviour:
   myDeck: []
   cardSpacing: 30
   shiftDuration: 0.5
+  spacing: 30
+  moveDuration: 0.5
 --- !u!4 &1657872010
 Transform:
   m_ObjectHideFlags: 0

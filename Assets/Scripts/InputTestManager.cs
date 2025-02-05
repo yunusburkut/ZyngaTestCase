@@ -19,6 +19,10 @@ public class InputTestManager : MonoBehaviour
         {
             SuitSortTest();
         }
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            GROUP();
+        }
     }
 
     public void OnDrawCardButtonPressed()
@@ -31,7 +35,11 @@ public class InputTestManager : MonoBehaviour
     }
     private void NumberSortTest()
     {
-       //MyDeckManager.Instance.SortAndRepositionDeckByNumber();
+       MyDeckManager.Instance.SortAndRepositionDeckByNumberThenSuitAscending();
+    }
+    private void GROUP()
+    {
+        MyDeckManager.Instance.MarkGroups();
     }
     private void DrawAndLogCard()
     {
