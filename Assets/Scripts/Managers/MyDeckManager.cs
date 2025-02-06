@@ -238,6 +238,10 @@ public class MyDeckManager : MonoBehaviour
         }
     }
 
+    public List<Card> GetMyDeck()
+    {
+        return myDeck;
+    }
     public void LogDeck()
     {
         System.Text.StringBuilder deckInfo = new System.Text.StringBuilder("MyDeck: ");
