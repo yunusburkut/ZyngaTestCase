@@ -39,7 +39,7 @@ public class InputTestManager : MonoBehaviour
     }
     private void SmartSort()
     {
-        MyDeckManager.Instance.SortAndRepositionDeckByNumberThenSuitAscending();
+       // MyDeckManager.Instance.SortAndRepositionDeckByNumberThenSuitAscending();
     }
     private void DrawAndLogCard()
     {

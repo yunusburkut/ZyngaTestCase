@@ -19,11 +19,14 @@ public class Card : MonoBehaviour
 {
     private CardData _cardData;
     private Image _image;// We don't want to take reference type on struct because of the heap usage
+    private RectTransform _cachedRectTransform;
 
     private void Awake()
     {
         _image = GetComponent<Image>(); //Run once 
+        _cachedRectTransform = GetComponent<RectTransform>();
     }
+    public RectTransform CachedRectTransform => _cachedRectTransform;
 
     public void Initialize(CardData cardData, Sprite sprite)
     {
