@@ -25,13 +25,13 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     private Vector2 originalPosition;
     private int originalSiblingIndex;
     private Vector2 pointerOffset;
+    private float originalY; 
     private void Awake()
     {
         _image = GetComponent<Image>(); //Run once 
         _cachedRectTransform = GetComponent<RectTransform>();
     }
     
-
     public RectTransform CachedRectTransform => _cachedRectTransform;
 
     public void Initialize(CardData cardData, Sprite sprite)
@@ -101,11 +101,12 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     {
         _cardData = cardData;
     }
-   
-
+    
     public void OnBeginDrag(PointerEventData eventData)
     {
-        // Kart üzerindeki pointer konumunu alıp offset hesaplıyoruz.
+        // Kartın mevcut konumunu saklıyoruz, özellikle y konumunu
+        originalY = _cachedRectTransform.anchoredPosition.y;
+        // Kart üzerindeki pointer offset'ini hesaplıyoruz
         RectTransformUtility.ScreenPointToLocalPointInRectangle(_cachedRectTransform, eventData.position, eventData.pressEventCamera, out pointerOffset);
         _cachedRectTransform.SetAsLastSibling();
         _cachedRectTransform.DOKill();
@@ -117,7 +118,9 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         RectTransform parentRect = _cachedRectTransform.parent as RectTransform;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, eventData.position, eventData.pressEventCamera, out localPoint))
         {
-            _cachedRectTransform.anchoredPosition = localPoint - pointerOffset;
+            // Sadece x ekseninde değişiklik yapıyoruz, y sabit kalıyor.
+            float newX = localPoint.x - pointerOffset.x;
+            _cachedRectTransform.anchoredPosition = new Vector2(newX, originalY);
         }
         MyDeckManager.Instance.UpdateCardsAnimationDuringDrag(this);
     }
@@ -125,7 +128,6 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     public void OnEndDrag(PointerEventData eventData)
     {
         _cachedRectTransform.DOKill();
-        // Kartın bırakıldığı ekran noktasını da gönderiyoruz.
         MyDeckManager.Instance.OnCardDragEnd(this, eventData.position, eventData.pressEventCamera);
     }
 }
