@@ -17,13 +17,9 @@ public class MyDeckManager : MonoBehaviour
     private void Awake()
     {
         if (Instance == null)
-        {
             Instance = this;
-        }
         else
-        {
             Destroy(gameObject);
-        }
     }
 
     public void AddCard(Card card)
@@ -38,8 +34,8 @@ public class MyDeckManager : MonoBehaviour
     public void UpdateDeckLayout()
     {
         int n = myDeck.Count;
-        if (n == 0) return;
-
+        if (n == 0)
+            return;
         float startX = -((n - 1) * cardSpacing) / 2f;
         for (int i = 0; i < n; i++)
         {
@@ -70,8 +66,8 @@ public class MyDeckManager : MonoBehaviour
     private void RepositionCards()
     {
         int cardCount = myDeck.Count;
-        if (cardCount == 0) return;
-
+        if (cardCount == 0)
+            return;
         float startX = -((cardCount - 1) * spacing) / 2f;
         for (int i = 0; i < cardCount; i++)
         {
@@ -79,7 +75,6 @@ public class MyDeckManager : MonoBehaviour
             RectTransform cardRect = card.CachedRectTransform;
             if (cardRect == null)
                 continue;
-
             Vector2 targetPos = new Vector2(startX + i * spacing, 0f);
             cardRect.DOKill();
             cardRect.DOAnchorPos(targetPos, moveDuration).SetEase(Ease.OutQuad);
@@ -91,7 +86,6 @@ public class MyDeckManager : MonoBehaviour
     {
         var dataA = cardA.GetCardData();
         var dataB = cardB.GetCardData();
-
         int suitDiff = dataA.Suit - dataB.Suit;
         if (suitDiff != 0)
             return suitDiff;
@@ -102,7 +96,6 @@ public class MyDeckManager : MonoBehaviour
     {
         var dataA = cardA.GetCardData();
         var dataB = cardB.GetCardData();
-
         int diff = dataA.Number - dataB.Number;
         if (diff != 0)
             return diff;
@@ -113,19 +106,14 @@ public class MyDeckManager : MonoBehaviour
     {
         int n = myDeck.Count;
         for (int i = 0; i < n; i++)
-        {
             myDeck[i].SetGroupID(0);
-        }
-
         int iIndex = 0;
         byte groupId = 1;
-
         while (iIndex < n)
         {
             bool grouped = false;
             var currentCard = myDeck[iIndex];
             var currentData = currentCard.GetCardData();
-
             if (iIndex < n - 1)
             {
                 var nextData = myDeck[iIndex + 1].GetCardData();
@@ -138,20 +126,14 @@ public class MyDeckManager : MonoBehaviour
                         var prevChainData = myDeck[iIndex + chainLength - 1].GetCardData();
                         if (nextChainData.Suit == currentData.Suit &&
                             nextChainData.Number == prevChainData.Number + 1)
-                        {
                             chainLength++;
-                        }
                         else
-                        {
                             break;
-                        }
                     }
                     if (chainLength >= 3)
                     {
                         for (int k = iIndex; k < iIndex + chainLength; k++)
-                        {
                             myDeck[k].SetGroupID(groupId);
-                        }
                         groupId++;
                         iIndex += chainLength;
                         grouped = true;
@@ -159,7 +141,6 @@ public class MyDeckManager : MonoBehaviour
                     }
                 }
             }
-
             if (!grouped && iIndex < n - 1)
             {
                 var nextData = myDeck[iIndex + 1].GetCardData();
@@ -170,20 +151,14 @@ public class MyDeckManager : MonoBehaviour
                     {
                         var chainData = myDeck[iIndex + chainLength].GetCardData();
                         if (chainData.Number == currentData.Number)
-                        {
                             chainLength++;
-                        }
                         else
-                        {
                             break;
-                        }
                     }
                     if (chainLength >= 3)
                     {
                         for (int k = iIndex; k < iIndex + chainLength; k++)
-                        {
                             myDeck[k].SetGroupID(groupId);
-                        }
                         groupId++;
                         iIndex += chainLength;
                         continue;
@@ -208,6 +183,58 @@ public class MyDeckManager : MonoBehaviour
                 ungroupedCards.Add(myDeck[i]);
                 totalPoints += myDeck[i].GetPoint();
             }
+        }
+    }
+
+     public void OnCardDragEnd(Card draggedCard, Vector2 screenPosition, Camera eventCamera)
+    {
+        RectTransform deckRect = draggedCard.CachedRectTransform.parent as RectTransform;
+        if (deckRect == null)
+            return;
+
+        Vector2 localPoint;
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(deckRect, screenPosition, eventCamera, out localPoint))
+            return;
+
+        // localPoint.x artık bırakıldığı x konumudur.
+        float dropX = localPoint.x;
+        int count = myDeck.Count;
+        float startX = -((count - 1) * spacing) / 2f;
+        // Yeni indeksi hesaplamak için dropX'in deck içerisindeki yerini belirliyoruz.
+        int newIndex = Mathf.RoundToInt((dropX - startX) / spacing);
+        newIndex = Mathf.Clamp(newIndex, 0, count - 1);
+
+        // Listeden kartı çıkarıp, hesaplanan indekse ekliyoruz.
+        if (myDeck.Contains(draggedCard))
+            myDeck.Remove(draggedCard);
+        myDeck.Insert(newIndex, draggedCard);
+        MarkGroups();
+        RepositionCards();
+    }
+
+    // Sürükleme sırasında diğer kartlara animasyon uygulayan metod.
+    public void UpdateCardsAnimationDuringDrag(Card draggedCard)
+    {
+        int count = myDeck.Count;
+        if (count == 0)
+            return;
+        float startX = -((count - 1) * spacing) / 2f;
+        float threshold = spacing * 0.5f;
+        float offsetY = 20f;
+        float draggedX = draggedCard.CachedRectTransform.anchoredPosition.x;
+        for (int i = 0; i < count; i++)
+        {
+            Card card = myDeck[i];
+            if (card == draggedCard)
+                continue;
+            RectTransform cardRect = card.CachedRectTransform;
+            if (cardRect == null)
+                continue;
+            float defaultX = startX + i * spacing;
+            float diff = Mathf.Abs(defaultX - draggedX);
+            Vector2 targetPos = (diff < threshold) ? new Vector2(defaultX, offsetY) : new Vector2(defaultX, 0f);
+            cardRect.DOKill();
+            cardRect.DOAnchorPos(targetPos, 0.2f).SetEase(Ease.OutQuad);
         }
     }
 
