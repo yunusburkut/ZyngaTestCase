@@ -13,11 +13,11 @@ public class InputTestManager : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Q))
         {
-            NumberSortTest();
+            SuitSortTest();
         }
         if (Input.GetKeyDown(KeyCode.W))
         {
-            SuitSortTest();
+            NumberSortTest();
         }
         if (Input.GetKeyDown(KeyCode.E))
         {
@@ -31,15 +31,15 @@ public class InputTestManager : MonoBehaviour
     }
     private void SuitSortTest()
     {
-        MyDeckManager.Instance.SortAndRepositionDeckBySuitAscending();
+        MyDeckManager.Instance.SetHesapla();
     }
     private void NumberSortTest()
     {
-       MyDeckManager.Instance.SortAndRepositionDeckByNumberThenSuitAscending();
+       MyDeckManager.Instance.RunHesapla();
     }
     private void SmartSort()
-    {
-       // MyDeckManager.Instance.SortAndRepositionDeckByNumberThenSuitAscending();
+    { 
+        MyDeckManager.Instance.OptimalDeckHesapla();
     }
     private void DrawAndLogCard()
     {
