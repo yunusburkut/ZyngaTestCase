@@ -1,15 +1,18 @@
 using UnityEngine;
 using System.Collections.Generic;
 using DG.Tweening;
+using System.Text;
 
 public class MyDeckManager : MonoBehaviour
 {
+    // Kartların bulunduğu deste
     [SerializeField] private List<Card> myDeck = new List<Card>();
     [SerializeField] private float cardSpacing = 30f;
     [SerializeField] private float shiftDuration = 0.5f;
     [SerializeField] private float spacing = 50f;
     [SerializeField] private float moveDuration = 0.5f;
-    
+
+    // Gruplanmamış (ungrouped) kartlar
     private List<Card> ungroupedCards = new List<Card>();
 
     public static MyDeckManager Instance;
@@ -22,6 +25,9 @@ public class MyDeckManager : MonoBehaviour
             Destroy(gameObject);
     }
 
+    #region Kart Düzenleme ve Görsel İşlemler
+
+    // Destenize kart ekler ve layout'u günceller.
     public void AddCard(Card card)
     {
         if (card != null)
@@ -31,6 +37,7 @@ public class MyDeckManager : MonoBehaviour
         }
     }
 
+    // Kartların konumlarını tween (animasyon) ile günceller.
     public void UpdateDeckLayout()
     {
         int n = myDeck.Count;
@@ -49,96 +56,97 @@ public class MyDeckManager : MonoBehaviour
         }
     }
 
+    // Kartları suit'e göre sıralayıp yeniden pozisyonlar.
     public void SortAndRepositionDeckBySuitAscending()
     {
         myDeck.Sort(CompareBySuitThenNumberAscending);
     }
 
+    // Kartları numara ve suit'e göre sıralayıp yeniden pozisyonlar.
     public void SortAndRepositionDeckByNumberThenSuitAscending()
     {
         myDeck.Sort(CompareByNumberThenSuitAscending);
     }
 
-
-public void RepositionCardsByGroup()
-{
-    Dictionary<int, List<Card>> groupedDict = new Dictionary<int, List<Card>>();
-    List<Card> ungroupedCardsLocal = new List<Card>();
-
-    foreach (Card card in myDeck)
+    // Kartları gruplarına göre yeniden düzenler.
+    public void RepositionCardsByGroup()
     {
-        int groupID = card.GetCardData().GroupID;
-        if (groupID != 0)
+        Dictionary<int, List<Card>> groupedDict = new Dictionary<int, List<Card>>();
+        List<Card> ungroupedCardsLocal = new List<Card>();
+
+        for (int i = 0; i < myDeck.Count; i++)
         {
-            if (!groupedDict.ContainsKey(groupID))
-                groupedDict[groupID] = new List<Card>();
-            groupedDict[groupID].Add(card);
+            int groupID = myDeck[i].GetCardData().GroupID;
+            if (groupID != 0)
+            {
+                if (!groupedDict.ContainsKey(groupID))
+                    groupedDict[groupID] = new List<Card>();
+                groupedDict[groupID].Add(myDeck[i]);
+            }
+            else
+            {
+                ungroupedCardsLocal.Add(myDeck[i]);
+            }
         }
-        else
+
+        // Her grup için stable sort uygulaması.
+        foreach (var kvp in groupedDict)
         {
-            ungroupedCardsLocal.Add(card);
+            StableSortGroup(kvp.Value);
         }
-    }
 
-    foreach (var kvp in groupedDict)
-    {
-        List<Card> groupList = kvp.Value;
-        StableSortGroup(groupList);
-    }
-
-    List<int> groupIDs = new List<int>(groupedDict.Keys);
-    groupIDs.Sort(); // Bu, int için stabil bir sıralama sağlar.
-    List<Card> newOrder = new List<Card>();
-    foreach (int gid in groupIDs)
-    {
-        newOrder.AddRange(groupedDict[gid]);
-    }
-    newOrder.AddRange(ungroupedCardsLocal);
-
-    myDeck = newOrder;
-
-    float startX = -((myDeck.Count - 1) * spacing) / 2f;
-    for (int i = 0; i < myDeck.Count; i++)
-    {
-        Card card = myDeck[i];
-    
-        card.transform.SetSiblingIndex(i);
-
-        RectTransform rt = card.CachedRectTransform;
-        if (rt != null)
+        List<int> groupIDs = new List<int>(groupedDict.Keys);
+        groupIDs.Sort();
+        List<Card> newOrder = new List<Card>();
+        foreach (int gid in groupIDs)
         {
-            Vector2 targetPos = new Vector2(startX + i * spacing, 0f);
-            rt.DOKill();
-            rt.DOAnchorPos(targetPos, moveDuration).SetEase(Ease.OutQuad);
+            newOrder.AddRange(groupedDict[gid]);
         }
-    }
-}
+        newOrder.AddRange(ungroupedCardsLocal);
 
-private void StableSortGroup(List<Card> group)
-{
-    for (int i = 1; i < group.Count; i++)
-    {
-        Card key = group[i];
-        int j = i - 1;
-        while (j >= 0 && CompareCardsWithinGroup(group[j], key) > 0)
+        myDeck = newOrder;
+
+        float startX = -((myDeck.Count - 1) * spacing) / 2f;
+        for (int i = 0; i < myDeck.Count; i++)
         {
-            group[j + 1] = group[j];
-            j--;
+            Card card = myDeck[i];
+            card.transform.SetSiblingIndex(i);
+            RectTransform rt = card.CachedRectTransform;
+            if (rt != null)
+            {
+                Vector2 targetPos = new Vector2(startX + i * spacing, 0f);
+                rt.DOKill();
+                rt.DOAnchorPos(targetPos, moveDuration).SetEase(Ease.OutQuad);
+            }
         }
-        group[j + 1] = key;
     }
-}
 
-private int CompareCardsWithinGroup(Card a, Card b)
-{
-    int numberDiff = a.GetCardData().Number.CompareTo(b.GetCardData().Number);
-    if (numberDiff != 0)
-        return numberDiff;
-    return a.GetCardData().Suit.CompareTo(b.GetCardData().Suit);
-}
+    // Grup içi sıralama: Insertion sort gibi stabil bir sıralama.
+    private void StableSortGroup(List<Card> group)
+    {
+        for (int i = 1; i < group.Count; i++)
+        {
+            Card key = group[i];
+            int j = i - 1;
+            while (j >= 0 && CompareCardsWithinGroup(group[j], key) > 0)
+            {
+                group[j + 1] = group[j];
+                j--;
+            }
+            group[j + 1] = key;
+        }
+    }
 
+    // Grup içi sıralama için karşılaştırma: Önce Number, sonra Suit.
+    private int CompareCardsWithinGroup(Card a, Card b)
+    {
+        int numberDiff = a.GetCardData().Number.CompareTo(b.GetCardData().Number);
+        if (numberDiff != 0)
+            return numberDiff;
+        return a.GetCardData().Suit.CompareTo(b.GetCardData().Suit);
+    }
 
-
+    // Suit önce, sonra numara karşılaştırması.
     private int CompareBySuitThenNumberAscending(Card cardA, Card cardB)
     {
         var dataA = cardA.GetCardData();
@@ -149,6 +157,7 @@ private int CompareCardsWithinGroup(Card a, Card b)
         return dataA.Number - dataB.Number;
     }
 
+    // Numara önce, sonra suit karşılaştırması.
     private int CompareByNumberThenSuitAscending(Card cardA, Card cardB)
     {
         var dataA = cardA.GetCardData();
@@ -159,6 +168,7 @@ private int CompareCardsWithinGroup(Card a, Card b)
         return dataA.Suit - dataB.Suit;
     }
 
+    // Kartlarda grupları işaretler: Sıralı run'ler ve aynı numaralı set'ler.
     public void MarkGroups()
     {
         int n = myDeck.Count;
@@ -227,6 +237,7 @@ private int CompareCardsWithinGroup(Card a, Card b)
         UpdateUngroupedCards();
     }
 
+    // Gruplanmamış kartların listesini günceller ve toplam puanları loglar.
     private void UpdateUngroupedCards()
     {
         ungroupedCards.Clear();
@@ -244,6 +255,7 @@ private int CompareCardsWithinGroup(Card a, Card b)
         }
     }
 
+    // Kart sürükleme (drag) bittiğinde çağrılır, kartın yeni pozisyonunu hesaplar.
     public void OnCardDragEnd(Card draggedCard, Vector2 screenPosition, Camera eventCamera)
     {
         RectTransform deckRect = draggedCard.CachedRectTransform.parent as RectTransform;
@@ -267,6 +279,7 @@ private int CompareCardsWithinGroup(Card a, Card b)
         RepositionCardsByGroup();
     }
 
+    // Sürükleme sırasında diğer kartların animasyonlarını günceller.
     public void UpdateCardsAnimationDuringDrag(Card draggedCard)
     {
         int count = myDeck.Count;
@@ -292,13 +305,16 @@ private int CompareCardsWithinGroup(Card a, Card b)
         }
     }
 
+    // Destenin tamamını döndürür.
     public List<Card> GetMyDeck()
     {
         return myDeck;
     }
+
+    // Destenin içeriğini loglar.
     public void LogDeck()
     {
-        System.Text.StringBuilder deckInfo = new System.Text.StringBuilder("MyDeck: ");
+        StringBuilder deckInfo = new StringBuilder("MyDeck: ");
         int n = myDeck.Count;
         for (int i = 0; i < n; i++)
         {
@@ -308,21 +324,26 @@ private int CompareCardsWithinGroup(Card a, Card b)
         Debug.Log(deckInfo.ToString());
     }
 
+    #endregion
+
+    #region Hesaplama Metotları (RunHesapla, SetHesapla)
+
+    // Sıralı (run) kombinasyonlar için hesaplama.
     public void RunHesapla()
     {
-        foreach (var card in myDeck)
-            card.SetGroupID(0);
+        for (int i = 0; i < myDeck.Count; i++)
+            myDeck[i].SetGroupID(0);
         myDeck.Sort(CompareBySuitThenNumberAscending);
 
         byte groupId = 1;
         int n = myDeck.Count;
-        int i = 0;
-        while (i < n)
+        int iIndex = 0;
+        while (iIndex < n)
         {
-            var currentCard = myDeck[i];
+            var currentCard = myDeck[iIndex];
             var currentData = currentCard.GetCardData();
             int chainLength = 1;
-            int j = i + 1;
+            int j = iIndex + 1;
             while (j < n)
             {
                 var nextCard = myDeck[j];
@@ -337,37 +358,38 @@ private int CompareCardsWithinGroup(Card a, Card b)
                     break;
                 }
             }
-           
             if (chainLength >= 3)
             {
-                for (int k = i; k < i + chainLength; k++)
+                for (int k = iIndex; k < iIndex + chainLength; k++)
                     myDeck[k].SetGroupID(groupId);
                 groupId++;
-                i += chainLength; 
+                iIndex += chainLength;
             }
             else
             {
-                i++;
+                iIndex++;
             }
         }
         UpdateUngroupedCards();
         RepositionCardsByGroup();
     }
+
+    // Set (aynı numaralı) kombinasyonlar için hesaplama.
     public void SetHesapla()
     {
-        foreach (var card in myDeck)
-            card.SetGroupID(0);
+        for (int i = 0; i < myDeck.Count; i++)
+            myDeck[i].SetGroupID(0);
         myDeck.Sort(CompareByNumberThenSuitAscending);
 
         byte groupId = 1;
         int n = myDeck.Count;
-        int i = 0;
-        while (i < n)
+        int iIndex = 0;
+        while (iIndex < n)
         {
-            var currentCard = myDeck[i];
+            var currentCard = myDeck[iIndex];
             var currentData = currentCard.GetCardData();
             int chainLength = 1;
-            int j = i + 1;
+            int j = iIndex + 1;
             while (j < n)
             {
                 var nextData = myDeck[j].GetCardData();
@@ -383,40 +405,48 @@ private int CompareCardsWithinGroup(Card a, Card b)
             }
             if (chainLength >= 3)
             {
-                for (int k = i; k < i + chainLength; k++)
+                for (int k = iIndex; k < iIndex + chainLength; k++)
                     myDeck[k].SetGroupID(groupId);
                 groupId++;
-                i += chainLength;
+                iIndex += chainLength;
             }
             else
             {
-                i++;
+                iIndex++;
             }
         }
         UpdateUngroupedCards();
         RepositionCardsByGroup();
     }
 
+    #endregion
+
+    #region OptimalDeckHesapla & DP (GC Dostu Versiyon)
+
+    // Optimal hesaplama: Kartların kombinasyonları (meld'ler) üzerinden DP uygulanıyor.
     public void OptimalDeckHesapla()
     {
-        foreach (var card in myDeck)
-            card.SetGroupID(0);
+        // Tüm kartların GroupID'sini sıfırla.
+        for (int i = 0; i < myDeck.Count; i++)
+            myDeck[i].SetGroupID(0);
 
-        int n = myDeck.Count;
-        List<int> candidateMelds = GenerateCandidateMelds();
+        // Candidate meld'leri oluşturuyoruz (bitmask yerine List<List<Card>> kullanılıyor).
+        List<List<Card>> candidateMelds = GenerateCandidateMelds();
 
+        // DP memoization için, state hash'ini int olarak kullanıyoruz.
         Dictionary<int, DPResult> memo = new Dictionary<int, DPResult>();
-        int fullMask = (1 << n) - 1;
-        DPResult optimal = ComputeOptimalMelds(fullMask, candidateMelds, n, memo);
+
+        // Orijinal listeyi değiştirmemek için kopyasını oluşturuyoruz.
+        List<Card> remaining = new List<Card>(myDeck);
+
+        DPResult optimal = ComputeOptimalMelds(remaining, candidateMelds, memo);
 
         byte groupId = 1;
-        foreach (int meldMask in optimal.meldMasks)
+        for (int i = 0; i < optimal.melds.Count; i++)
         {
-            for (int i = 0; i < n; i++)
-            {
-                if ((meldMask & (1 << i)) != 0)
-                    myDeck[i].SetGroupID(groupId);
-            }
+            List<Card> meld = optimal.melds[i];
+            for (int j = 0; j < meld.Count; j++)
+                meld[j].SetGroupID(groupId);
             groupId++;
         }
 
@@ -426,77 +456,121 @@ private int CompareCardsWithinGroup(Card a, Card b)
         Debug.Log("Optimal Deadwood Puanı: " + optimal.deadwood);
     }
 
-    
+    // DP sonucunu tutan sınıf (liste tabanlı)
     private class DPResult
     {
-        public int deadwood;           
-        public List<int> meldMasks;    
+        public int deadwood;           // Kalan kartların toplam puanı
+        public List<List<Card>> melds; // Seçilen meld'ler (her biri kart listesidir)
     }
 
-    private int SumPoints(int mask, int n)
+    // Kalan kartların toplam puanını hesaplar.
+    private int SumPoints(List<Card> cards)
     {
         int sum = 0;
-        for (int i = 0; i < n; i++)
-        {
-            if ((mask & (1 << i)) != 0)
-                sum += myDeck[i].GetPoint();
-        }
+        for (int i = 0; i < cards.Count; i++)
+            sum += cards[i].GetPoint();
         return sum;
     }
-    private DPResult ComputeOptimalMelds(int mask, List<int> candidateMelds, int n, Dictionary<int, DPResult> memo)
+
+    // Order-independent state hash hesaplaması: Her kartın GetInstanceID() değeri üzerinden.
+    private int GetStateHash(List<Card> remaining)
     {
-        if (mask == 0)
-            return new DPResult { deadwood = 0, meldMasks = new List<int>() };
-
-        if (memo.ContainsKey(mask))
-            return memo[mask];
-
-        int bestDeadwood = SumPoints(mask, n);
-        List<int> bestMelds = new List<int>(); 
-
-        foreach (int meld in candidateMelds)
+        int sum = 0;
+        int xor = 0;
+        for (int i = 0; i < remaining.Count; i++)
         {
-            if ((mask & meld) == meld)
+            int id = remaining[i].GetInstanceID();
+            sum += id;
+            xor ^= id;
+        }
+        return (sum * 397) ^ xor;
+    }
+
+    // DP metodu: Mevcut remaining listesinden in-place modifikasyon yaparak hesaplama.
+    private DPResult ComputeOptimalMelds(List<Card> remaining, List<List<Card>> candidateMelds, Dictionary<int, DPResult> memo)
+    {
+        if (remaining.Count == 0)
+            return new DPResult { deadwood = 0, melds = new List<List<Card>>() };
+
+        int key = GetStateHash(remaining);
+        if (memo.TryGetValue(key, out DPResult cached))
+            return cached;
+
+        int bestDeadwood = SumPoints(remaining);
+        List<List<Card>> bestMelds = null;
+
+        // Geçici liste: Meld'deki kartları çıkarmada kullanıyoruz.
+        List<Card> removed = new List<Card>();
+
+        for (int m = 0; m < candidateMelds.Count; m++)
+        {
+            List<Card> meld = candidateMelds[m];
+            bool isSubset = true;
+            for (int i = 0; i < meld.Count; i++)
             {
-                int remainingMask = mask & ~meld; 
-                DPResult subResult = ComputeOptimalMelds(remainingMask, candidateMelds, n, memo);
-                if (subResult.deadwood < bestDeadwood)
+                if (!remaining.Contains(meld[i]))
                 {
-                    bestDeadwood = subResult.deadwood;
-                    bestMelds = new List<int>(subResult.meldMasks);
-                    bestMelds.Add(meld);
+                    isSubset = false;
+                    break;
                 }
             }
+            if (!isSubset)
+                continue;
+
+            // Meld'deki kartları remaining listesinden çıkarıyoruz (in-place).
+            removed.Clear();
+            for (int i = 0; i < meld.Count; i++)
+            {
+                if (remaining.Remove(meld[i]))
+                    removed.Add(meld[i]);
+            }
+
+            DPResult subResult = ComputeOptimalMelds(remaining, candidateMelds, memo);
+            int currentDeadwood = subResult.deadwood;
+            if (currentDeadwood < bestDeadwood)
+            {
+                bestDeadwood = currentDeadwood;
+                bestMelds = new List<List<Card>>(subResult.melds);
+                bestMelds.Add(meld);
+            }
+
+            // Çıkarılan kartları tekrar ekliyoruz.
+            remaining.AddRange(removed);
         }
 
-        DPResult result = new DPResult { deadwood = bestDeadwood, meldMasks = bestMelds };
-        memo[mask] = result;
+        if (bestMelds == null)
+            bestMelds = new List<List<Card>>();
+
+        DPResult result = new DPResult { deadwood = bestDeadwood, melds = bestMelds };
+        memo[key] = result;
         return result;
     }
 
-    private List<int> GenerateCandidateMelds()
+    // Candidate meld'leri oluşturur: Run'ler (aynı suit ve ardışık) ve set'ler (aynı numara).
+    private List<List<Card>> GenerateCandidateMelds()
     {
-        List<int> candidates = new List<int>();
+        List<List<Card>> candidates = new List<List<Card>>();
         int n = myDeck.Count;
 
-        Dictionary<int, List<int>> suitGroups = new Dictionary<int, List<int>>();
+        // Run'ler: Aynı suit içindeki ardışık kartlar.
+        Dictionary<int, List<Card>> suitGroups = new Dictionary<int, List<Card>>();
         for (int i = 0; i < n; i++)
         {
             int suit = myDeck[i].GetCardData().Suit;
             if (!suitGroups.ContainsKey(suit))
-                suitGroups[suit] = new List<int>();
-            suitGroups[suit].Add(i);
+                suitGroups[suit] = new List<Card>();
+            suitGroups[suit].Add(myDeck[i]);
         }
         foreach (var kvp in suitGroups)
         {
-            List<int> indices = kvp.Value;
-            indices.Sort((a, b) => myDeck[a].GetCardData().Number.CompareTo(myDeck[b].GetCardData().Number));
-            for (int i = 0; i < indices.Count; i++)
+            List<Card> cardsOfSuit = kvp.Value;
+            cardsOfSuit.Sort((a, b) => a.GetCardData().Number.CompareTo(b.GetCardData().Number));
+            for (int i = 0; i < cardsOfSuit.Count; i++)
             {
                 int start = i;
-                int end = i; 
-                while (end + 1 < indices.Count &&
-                       myDeck[indices[end + 1]].GetCardData().Number == myDeck[indices[end]].GetCardData().Number + 1)
+                int end = i;
+                while (end + 1 < cardsOfSuit.Count &&
+                       cardsOfSuit[end + 1].GetCardData().Number == cardsOfSuit[end].GetCardData().Number + 1)
                 {
                     end++;
                 }
@@ -507,54 +581,65 @@ private int CompareCardsWithinGroup(Card a, Card b)
                     {
                         for (int j = start; j <= end - runSize + 1; j++)
                         {
-                            int meldMask = 0;
+                            List<Card> meld = new List<Card>();
                             for (int k = 0; k < runSize; k++)
-                            {
-                                int cardIndex = indices[j + k];
-                                meldMask |= (1 << cardIndex);
-                            }
-                            candidates.Add(meldMask);
+                                meld.Add(cardsOfSuit[j + k]);
+                            candidates.Add(meld);
                         }
                     }
                 }
-                i = end; 
+                i = end;
             }
         }
 
-        Dictionary<int, List<int>> numberGroups = new Dictionary<int, List<int>>();
+        // Set'ler: Aynı numaraya sahip kartlar.
+        Dictionary<int, List<Card>> numberGroups = new Dictionary<int, List<Card>>();
         for (int i = 0; i < n; i++)
         {
             int number = myDeck[i].GetCardData().Number;
             if (!numberGroups.ContainsKey(number))
-                numberGroups[number] = new List<int>();
-            numberGroups[number].Add(i);
+                numberGroups[number] = new List<Card>();
+            numberGroups[number].Add(myDeck[i]);
         }
         foreach (var kvp in numberGroups)
         {
-            List<int> indices = kvp.Value;
-            if (indices.Count >= 3)
+            List<Card> cardsOfNumber = kvp.Value;
+            if (cardsOfNumber.Count >= 3)
             {
-                List<int> meldCombinationMasks = new List<int>();
-                GenerateCombinations(indices, 0, indices.Count, 3, 0, meldCombinationMasks);
-                if (indices.Count >= 4)
-                    GenerateCombinations(indices, 0, indices.Count, 4, 0, meldCombinationMasks);
-                candidates.AddRange(meldCombinationMasks);
+                List<List<Card>> combinations3 = GenerateCombinations(cardsOfNumber, 3);
+                candidates.AddRange(combinations3);
+                if (cardsOfNumber.Count >= 4)
+                {
+                    List<List<Card>> combinations4 = GenerateCombinations(cardsOfNumber, 4);
+                    candidates.AddRange(combinations4);
+                }
             }
         }
         return candidates;
     }
 
-    private void GenerateCombinations(List<int> indices, int start, int n, int targetCount, int currentMask, List<int> results)
+    // Verilen listeden targetCount eleman içeren tüm kombinasyonları üretir.
+    private List<List<Card>> GenerateCombinations(List<Card> list, int targetCount)
+    {
+        List<List<Card>> results = new List<List<Card>>();
+        GenerateCombinationsRecursive(list, targetCount, 0, new List<Card>(), results);
+        return results;
+    }
+
+    private void GenerateCombinationsRecursive(List<Card> list, int targetCount, int start, List<Card> current, List<List<Card>> results)
     {
         if (targetCount == 0)
         {
-            results.Add(currentMask);
+            results.Add(new List<Card>(current));
             return;
         }
-        for (int i = start; i < n; i++)
+        for (int i = start; i < list.Count; i++)
         {
-            int newMask = currentMask | (1 << indices[i]);
-            GenerateCombinations(indices, i + 1, n, targetCount - 1, newMask, results);
+            current.Add(list[i]);
+            GenerateCombinationsRecursive(list, targetCount - 1, i + 1, current, results);
+            current.RemoveAt(current.Count - 1);
         }
     }
+
+    #endregion
 }
