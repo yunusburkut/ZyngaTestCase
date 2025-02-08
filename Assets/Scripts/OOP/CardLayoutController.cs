@@ -4,124 +4,40 @@ using UnityEngine;
 
 public class CardLayoutController
 {
-    private float cardSpacing;
-    private float shiftDuration;
-    private float spacing;
-    private float moveDuration;
-    private float dragOffsetY = 20f;
+    private readonly float cardSpacing;
+    private readonly float shiftDuration;
+    private readonly float spacing;
+    private readonly float moveDuration;
+    private readonly float dragOffsetY;
 
-    public CardLayoutController(float cardSpacing, float shiftDuration, float spacing, float moveDuration)
+    private readonly Dictionary<int, List<Card>> _groupedCardsCache = new Dictionary<int, List<Card>>();
+    private readonly List<Card> _ungroupedCardsCache = new List<Card>();
+    private readonly List<int> _sortedGroupIDsCache = new List<int>();
+    private readonly List<Card> _newOrderCache = new List<Card>();
+
+    public CardLayoutController(float cardSpacing, float shiftDuration, float spacing, float moveDuration, float dragOffsetY = 20f)
     {
         this.cardSpacing = cardSpacing;
         this.shiftDuration = shiftDuration;
         this.spacing = spacing;
         this.moveDuration = moveDuration;
+        this.dragOffsetY = dragOffsetY;
     }
 
     public void UpdateLayout(List<Card> deck)
     {
-        int count = deck.Count;
-        if (count == 0) return;
-        float startX = -((count - 1) * cardSpacing) / 2f;
-        for (int i = 0; i < count; i++)
-        {
-            Card card = deck[i];
-            RectTransform rt = card.CachedRectTransform;
-            if (rt != null)
-            {
-                Vector2 targetPos = new Vector2(startX + i * cardSpacing, 0);
-                rt.DOKill();
-                rt.DOAnchorPos(targetPos, shiftDuration).SetEase(Ease.OutQuad);
-            }
-        }
+        ApplyLayout(deck, cardSpacing, shiftDuration, updateSiblingIndices: false);
     }
 
     public void RepositionCards(List<Card> deck)
     {
-        int count = deck.Count;
-        if (count == 0) return;
-        float startX = -((count - 1) * spacing) / 2f;
-        for (int i = 0; i < count; i++)
-        {
-            Card card = deck[i];
-            card.transform.SetSiblingIndex(i);
-            RectTransform rt = card.CachedRectTransform;
-            if (rt != null)
-            {
-                Vector2 targetPos = new Vector2(startX + i * spacing, 0f);
-                rt.DOKill();
-                rt.DOAnchorPos(targetPos, moveDuration).SetEase(Ease.OutQuad);
-            }
-        }
+        ApplyLayout(deck, spacing, moveDuration, updateSiblingIndices: true);
     }
 
-    public void RepositionDPGroupedCardsLeftAligned(List<Card> deck)
+    public void RepositionDpGroupedCardsLeftAligned(List<Card> deck)
     {
-        Dictionary<int, List<Card>> groupedCards = new Dictionary<int, List<Card>>();
-        List<Card> ungroupedCards = new List<Card>();
-
-        for (int i = 0; i < deck.Count; i++)
-        {
-            Card card = deck[i];
-            int groupId = card.GetCardData().GroupID;
-            if (groupId > 0)
-            {
-                if (!groupedCards.ContainsKey(groupId))
-                    groupedCards.Add(groupId, new List<Card>());
-                groupedCards[groupId].Add(card);
-            }
-            else
-            {
-                ungroupedCards.Add(card);
-            }
-        }
-
-        List<int> sortedGroupIDs = new List<int>();
-        foreach (int key in groupedCards.Keys)
-        {
-            sortedGroupIDs.Add(key);
-        }
-
-        for (int i = 0; i < sortedGroupIDs.Count - 1; i++)
-        {
-            for (int j = i + 1; j < sortedGroupIDs.Count; j++)
-            {
-                if (sortedGroupIDs[i] > sortedGroupIDs[j])
-                {
-                    (sortedGroupIDs[i], sortedGroupIDs[j]) = (sortedGroupIDs[j], sortedGroupIDs[i]);
-                }
-            }
-        }
-
-        List<Card> newOrder = new List<Card>();
-        for (int i = 0; i < sortedGroupIDs.Count; i++)
-        {
-            int groupId = sortedGroupIDs[i];
-            List<Card> groupList = groupedCards[groupId];
-            for (int j = 0; j < groupList.Count; j++)
-            {
-                newOrder.Add(groupList[j]);
-            }
-        }
-        for (int i = 0; i < ungroupedCards.Count; i++)
-        {
-            newOrder.Add(ungroupedCards[i]);
-        }
-
-        float startX = -((newOrder.Count - 1) * spacing) / 2f;
-        for (int i = 0; i < newOrder.Count; i++)
-        {
-            Card card = newOrder[i];
-            card.transform.SetSiblingIndex(i);
-            RectTransform rt = card.CachedRectTransform;
-            if (rt != null)
-            {
-                Vector2 targetPos = new Vector2(startX + i * spacing, 0f);
-                rt.DOKill();
-                rt.DOAnchorPos(targetPos, moveDuration).SetEase(Ease.OutQuad);
-            }
-        }
-
+        List<Card> newOrder = GetDPGroupedOrder(deck);
+        ApplyLayout(newOrder, spacing, moveDuration, updateSiblingIndices: true);
         deck.Clear();
         deck.AddRange(newOrder);
     }
@@ -134,7 +50,7 @@ public class CardLayoutController
             return;
         float dropX = localPoint.x;
         int count = deck.Count;
-        float startX = -((count - 1) * spacing) / 2f;
+        float startX = CalculateStartX(count, spacing);
         int newIndex = Mathf.RoundToInt((dropX - startX) / spacing);
         newIndex = Mathf.Clamp(newIndex, 0, count - 1);
         if (deck.Contains(draggedCard))
@@ -146,7 +62,7 @@ public class CardLayoutController
     {
         int count = deck.Count;
         if (count == 0) return;
-        float startX = -((count - 1) * spacing) / 2f;
+        float startX = CalculateStartX(count, spacing);
         float threshold = spacing * 0.5f;
         float draggedX = draggedCard.CachedRectTransform.anchoredPosition.x;
         for (int i = 0; i < count; i++)
@@ -158,8 +74,82 @@ public class CardLayoutController
             float defaultX = startX + i * spacing;
             float diff = Mathf.Abs(defaultX - draggedX);
             Vector2 targetPos = (diff < threshold) ? new Vector2(defaultX, dragOffsetY) : new Vector2(defaultX, 0f);
-            rt.DOKill();
-            rt.DOAnchorPos(targetPos, 0.2f).SetEase(Ease.OutQuad);
+            AnimateCard(card, targetPos, 0.2f);
         }
+    }
+
+    private float CalculateStartX(int count, float spacingValue)
+    {
+        return -((count - 1) * spacingValue) / 2f;
+    }
+
+    private void AnimateCard(Card card, Vector2 targetPos, float duration)
+    {
+        RectTransform rt = card.CachedRectTransform;
+        if (rt != null)
+        {
+            rt.DOKill();
+            rt.DOAnchorPos(targetPos, duration).SetEase(Ease.OutQuad);
+        }
+    }
+
+    private void ApplyLayout(List<Card> deck, float spacingValue, float duration, bool updateSiblingIndices)
+    {
+        int count = deck.Count;
+        if (count == 0) return;
+        float startX = CalculateStartX(count, spacingValue);
+        for (int i = 0; i < count; i++)
+        {
+            if (updateSiblingIndices)
+                deck[i].transform.SetSiblingIndex(i);
+            AnimateCard(deck[i], new Vector2(startX + i * spacingValue, 0), duration);
+        }
+    }
+
+    private List<Card> GetDPGroupedOrder(List<Card> deck)
+    {
+        _groupedCardsCache.Clear();
+        _ungroupedCardsCache.Clear();
+        _sortedGroupIDsCache.Clear();
+        _newOrderCache.Clear();
+
+        int deckCount = deck.Count;
+        for (int i = 0; i < deckCount; i++)
+        {
+            Card card = deck[i];
+            int groupId = card.GetCardData().GroupID;
+            if (groupId > 0)
+            {
+                if (!_groupedCardsCache.TryGetValue(groupId, out List<Card> group))
+                {
+                    group = new List<Card>();
+                    _groupedCardsCache.Add(groupId, group);
+                }
+                group.Add(card);
+            }
+            else
+            {
+                _ungroupedCardsCache.Add(card);
+            }
+        }
+
+        foreach (var pair in _groupedCardsCache)
+            _sortedGroupIDsCache.Add(pair.Key);
+        _sortedGroupIDsCache.Sort();
+
+        int sortedCount = _sortedGroupIDsCache.Count;
+        for (int i = 0; i < sortedCount; i++)
+        {
+            int id = _sortedGroupIDsCache[i];
+            _groupedCardsCache[id].Sort(CompareCardNumber);
+            _newOrderCache.AddRange(_groupedCardsCache[id]);
+        }
+        _newOrderCache.AddRange(_ungroupedCardsCache);
+        return _newOrderCache;
+    }
+
+    private static int CompareCardNumber(Card a, Card b)
+    {
+        return a.GetCardData().Number.CompareTo(b.GetCardData().Number);
     }
 }

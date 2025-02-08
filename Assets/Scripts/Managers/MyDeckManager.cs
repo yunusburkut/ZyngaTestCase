@@ -65,13 +65,13 @@ public class MyDeckManager : MonoBehaviour
     public void CalculateRun()
     {
         groupCalculator.CalculateRun(myDeck);
-        layoutController.RepositionDPGroupedCardsLeftAligned(myDeck);
+        layoutController.RepositionDpGroupedCardsLeftAligned(myDeck);
     }
 
     public void CalculateSet()
     {
         groupCalculator.CalculateSet(myDeck);
-        layoutController.RepositionDPGroupedCardsLeftAligned(myDeck);
+        layoutController.RepositionDpGroupedCardsLeftAligned(myDeck);
     }
 
     public void ComputeOptimalMelds()
@@ -86,7 +86,7 @@ public class MyDeckManager : MonoBehaviour
             }
             groupId++;
         }
-        layoutController.RepositionDPGroupedCardsLeftAligned(myDeck);
+        layoutController.RepositionDpGroupedCardsLeftAligned(myDeck);
         Debug.Log("Optimal Deadwood Puanı: " + result.Deadwood);
     }
 
