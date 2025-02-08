@@ -15,24 +15,17 @@ public class GroupCalculator
         {
             bool grouped = false;
             Card current = deck[index];
+            // currentData'yi bir kere alıyoruz.
             CardData currentData = current.GetCardData();
 
             // Run kontrolü: Aynı suit içinde ardışık kartlar
             if (index < n - 1)
             {
+                // Önceki değeri alıp karşılaştırıyoruz.
                 CardData nextData = deck[index + 1].GetCardData();
                 if (currentData.Suit == nextData.Suit)
                 {
-                    int chainLength = 1;
-                    while (index + chainLength < n)
-                    {
-                        CardData nextChain = deck[index + chainLength].GetCardData();
-                        CardData prevChain = deck[index + chainLength - 1].GetCardData();
-                        if (nextChain.Suit == currentData.Suit && nextChain.Number == prevChain.Number + 1)
-                            chainLength++;
-                        else
-                            break;
-                    }
+                    int chainLength = GetRunChainLength(deck, index, n, currentData.Suit, currentData.Number);
                     if (chainLength >= 3)
                     {
                         for (int k = index; k < index + chainLength; k++)
@@ -47,17 +40,11 @@ public class GroupCalculator
             // Set kontrolü: Aynı numaralı kartlar
             if (!grouped && index < n - 1)
             {
+                int targetNumber = currentData.Number;
                 CardData nextData = deck[index + 1].GetCardData();
-                if (currentData.Number == nextData.Number)
+                if (targetNumber == nextData.Number)
                 {
-                    int chainLength = 1;
-                    while (index + chainLength < n)
-                    {
-                        if (deck[index + chainLength].GetCardData().Number == currentData.Number)
-                            chainLength++;
-                        else
-                            break;
-                    }
+                    int chainLength = GetSetChainLength(deck, index, n, targetNumber);
                     if (chainLength >= 3)
                     {
                         for (int k = index; k < index + chainLength; k++)
@@ -75,31 +62,18 @@ public class GroupCalculator
     public void CalculateRun(List<Card> deck)
     {
         deck.Sort(CardComparer.CompareBySuitThenNumber);
-        for (int i = 0; i < deck.Count; i++)
+        int n = deck.Count;
+        // Sıfırlama işlemini minimal GC etkisiyle yapalım.
+        for (int i = 0; i < n; i++)
             deck[i].SetGroupID(0);
 
         byte groupId = 1;
-        int n = deck.Count;
         int index = 0;
         while (index < n)
         {
-            Card current = deck[index];
-            CardData currentData = current.GetCardData();
-            int chainLength = 1;
-            int j = index + 1;
-            while (j < n)
-            {
-                CardData nextData = deck[j].GetCardData();
-                if (currentData.Suit == nextData.Suit && nextData.Number == currentData.Number + chainLength)
-                {
-                    chainLength++;
-                    j++;
-                }
-                else
-                {
-                    break;
-                }
-            }
+            // currentData'yi bir kere alıyoruz.
+            CardData currentData = deck[index].GetCardData();
+            int chainLength = GetRunChainLength(deck, index, n, currentData.Suit, currentData.Number);
             if (chainLength >= 3)
             {
                 for (int k = index; k < index + chainLength; k++)
@@ -117,30 +91,16 @@ public class GroupCalculator
     public void CalculateSet(List<Card> deck)
     {
         deck.Sort(CardComparer.CompareByNumberThenSuit);
-        for (int i = 0; i < deck.Count; i++)
+        int n = deck.Count;
+        for (int i = 0; i < n; i++)
             deck[i].SetGroupID(0);
 
         byte groupId = 1;
-        int n = deck.Count;
         int index = 0;
         while (index < n)
         {
-            Card current = deck[index];
-            CardData currentData = current.GetCardData();
-            int chainLength = 1;
-            int j = index + 1;
-            while (j < n)
-            {
-                if (deck[j].GetCardData().Number == currentData.Number)
-                {
-                    chainLength++;
-                    j++;
-                }
-                else
-                {
-                    break;
-                }
-            }
+            int targetNumber = deck[index].GetCardData().Number;
+            int chainLength = GetSetChainLength(deck, index, n, targetNumber);
             if (chainLength >= 3)
             {
                 for (int k = index; k < index + chainLength; k++)
@@ -153,5 +113,37 @@ public class GroupCalculator
                 index++;
             }
         }
+    }
+
+    // Run zincir uzunluğunu hesaplar. Eğer GetCardData() metodunun her çağrısı yeni nesne oluşturuyorsa,
+    // bu değerleri lokal değişkende saklamak GC baskısını azaltır.
+    private static int GetRunChainLength(List<Card> deck, int startIndex, int n, int suit, int startNumber)
+    {
+        int chainLength = 1;
+        for (int i = startIndex + 1; i < n; i++)
+        {
+            CardData nextData = deck[i].GetCardData();
+            if (nextData.Suit != suit)
+                break;
+            if (nextData.Number == startNumber + chainLength)
+                chainLength++;
+            else
+                break;
+        }
+        return chainLength;
+    }
+
+    // Set zincir uzunluğunu hesaplar.
+    private static int GetSetChainLength(List<Card> deck, int startIndex, int n, int targetNumber)
+    {
+        int chainLength = 1;
+        for (int i = startIndex + 1; i < n; i++)
+        {
+            if (deck[i].GetCardData().Number == targetNumber)
+                chainLength++;
+            else
+                break;
+        }
+        return chainLength;
     }
 }
