@@ -31,15 +31,15 @@ public class InputTestManager : MonoBehaviour
     }
     private void SuitSortTest()
     {
-        MyDeckManager.Instance.SetHesapla();
+        MyDeckManager.Instance.CalculateSet();
     }
     private void NumberSortTest()
     {
-       MyDeckManager.Instance.RunHesapla();
+       MyDeckManager.Instance.CalculateRun();
     }
     private void SmartSort()
     { 
-        MyDeckManager.Instance.OptimalDeckHesapla();
+        MyDeckManager.Instance.ComputeOptimalMelds();
     }
     private void DrawAndLogCard()
     {

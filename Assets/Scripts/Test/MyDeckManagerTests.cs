@@ -108,7 +108,7 @@ public class MyDeckManagerSort10CardsTests
         deckManager.AddCard(card10);
 
         // Sıralama metodunu çağırıyoruz.
-        deckManager.SortAndRepositionDeckBySuitAscending();
+        deckManager.SortDeckByNumberThenSuit();
 
         // deckManagerGO altındaki kartların sıralı hali, sibling index'e göre belirlenecektir.
         Card[] cardsInParent = deckManagerGO.GetComponentsInChildren<Card>();
@@ -212,7 +212,7 @@ public class MyDeckManagerSort10CardsTests
         deckManager.AddCard(card10);
 
         // Sıralama metodunu çağırıyoruz.
-        deckManager.SortAndRepositionDeckByNumberThenSuitAscending();
+        deckManager.SortDeckBySuitThenNumber();
 
         // deckManagerGO altındaki kartların sıralı hali, sibling index'e göre belirlenecektir.
         Card[] cardsInParent = deckManagerGO.GetComponentsInChildren<Card>();
