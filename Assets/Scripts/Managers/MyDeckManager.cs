@@ -69,7 +69,7 @@ public class MyDeckManager : MonoBehaviour
     }
 
     // Kartları gruplarına göre yeniden düzenler.
-    public void RepositionCardsByGroup()
+    public void RepositionCardsByGroup(bool isDPFunction)
     {
         Dictionary<int, List<Card>> groupedDict = new Dictionary<int, List<Card>>();
         List<Card> ungroupedCardsLocal = new List<Card>();
@@ -104,8 +104,11 @@ public class MyDeckManager : MonoBehaviour
         }
         newOrder.AddRange(ungroupedCardsLocal);
 
-        myDeck = newOrder;
-
+        if (isDPFunction)
+        {
+            myDeck = newOrder;
+        }
+        
         float startX = -((myDeck.Count - 1) * spacing) / 2f;
         for (int i = 0; i < myDeck.Count; i++)
         {
@@ -276,7 +279,7 @@ public class MyDeckManager : MonoBehaviour
             myDeck.Remove(draggedCard);
         myDeck.Insert(newIndex, draggedCard);
         MarkGroups();
-        RepositionCardsByGroup();
+        RepositionCardsByGroup(false);
     }
 
     // Sürükleme sırasında diğer kartların animasyonlarını günceller.
@@ -371,7 +374,7 @@ public class MyDeckManager : MonoBehaviour
             }
         }
         UpdateUngroupedCards();
-        RepositionCardsByGroup();
+        RepositionCardsByGroup(true);
     }
 
     // Set (aynı numaralı) kombinasyonlar için hesaplama.
@@ -416,7 +419,7 @@ public class MyDeckManager : MonoBehaviour
             }
         }
         UpdateUngroupedCards();
-        RepositionCardsByGroup();
+        RepositionCardsByGroup(true);
     }
 
     #endregion
@@ -451,7 +454,7 @@ public class MyDeckManager : MonoBehaviour
         }
 
         UpdateUngroupedCards();
-        RepositionCardsByGroup();
+        RepositionCardsByGroup(true);
 
         Debug.Log("Optimal Deadwood Puanı: " + optimal.deadwood);
     }
