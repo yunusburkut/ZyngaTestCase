@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class GroupCalculator
 {
+    private int deadwood = 0;
     public void MarkGroups(List<Card> deck)
     {
         int n = deck.Count;
@@ -137,7 +138,7 @@ public class GroupCalculator
     }
     public int CalculateDeadwood(List<Card> deck)
     {
-        int deadwood = 0;
+        deadwood = 0;
         int n = deck.Count;
         for (int i = 0; i < n; i++)
         {
@@ -145,6 +146,11 @@ public class GroupCalculator
                 deadwood += deck[i].GetPoint();
         }
         Debug.Log("Deadwood : " + deadwood);
+        return deadwood;
+    }
+
+    public int GetDeadwood()
+    {
         return deadwood;
     }
     // Set zincir uzunluğunu hesaplar.

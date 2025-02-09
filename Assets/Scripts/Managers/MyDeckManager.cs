@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Text;
 using DG.Tweening;
+using TMPro;
 
 public class MyDeckManager : MonoBehaviour
 {
@@ -10,7 +11,8 @@ public class MyDeckManager : MonoBehaviour
     [SerializeField] private float shiftDuration = 0.5f;
     [SerializeField] private float spacing = 50f;
     [SerializeField] private float moveDuration = 0.5f;
-
+    [SerializeField] private TextMeshProUGUI deadwoodText;
+    
     public static MyDeckManager Instance;
 
     private CardLayoutController layoutController;
@@ -65,16 +67,19 @@ public class MyDeckManager : MonoBehaviour
     public void CalculateRun()
     {
         groupCalculator.CalculateRun(myDeck);
+        UpdateDeadwoodUI(groupCalculator.GetDeadwood());
         layoutController.RepositionDpGroupedCardsLeftAligned(myDeck);
     }
 
     public void CalculateSet()
     {
         groupCalculator.CalculateSet(myDeck);
+        UpdateDeadwoodUI(groupCalculator.GetDeadwood());
         layoutController.RepositionDpGroupedCardsLeftAligned(myDeck);
         
     }
 
+  
     public void ComputeOptimalMelds()
     {
         MeldOptimizer.OptimalResult result = meldOptimizer.ComputeOptimalMelds(myDeck);
@@ -88,6 +93,7 @@ public class MyDeckManager : MonoBehaviour
             groupId++;
         }
         layoutController.RepositionDpGroupedCardsLeftAligned(myDeck);
+        UpdateDeadwoodUI(result.Deadwood);
         Debug.Log("Deadwood : " + result.Deadwood);
     }
 
@@ -113,5 +119,17 @@ public class MyDeckManager : MonoBehaviour
             sb.Append($"[{i}] Number:{data.Number}, Suit:{data.Suit}  ");
         }
         Debug.Log(sb.ToString());
+    }
+    
+    private void UpdateDeadwoodUI(int deadwood)
+    {
+        if (deadwoodText != null)
+        {
+            deadwoodText.text = "Deadwood: " + deadwood.ToString();
+        }
+        else
+        {
+            Debug.Log("Deadwood: " + deadwood);
+        }
     }
 }

@@ -2037,6 +2037,7 @@ MonoBehaviour:
   shiftDuration: 0.5
   spacing: 30
   moveDuration: 0.5
+  deadwoodText: {fileID: 1548993985}
 --- !u!4 &1657872010
 Transform:
   m_ObjectHideFlags: 0
