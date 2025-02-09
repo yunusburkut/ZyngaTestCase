@@ -7,7 +7,6 @@ public class BoardManager : MonoBehaviour
     private Stack<Card> deckStack = new Stack<Card>();
     private List<Card> deckList = new List<Card>();
     [SerializeField] private CardPool cardPool;
-    [SerializeField] private Sprite[] cardSprites;
     [SerializeField] private RectTransform destinationPanel;
     [SerializeField] private RectTransform StartPanel;
     
@@ -41,8 +40,7 @@ public class BoardManager : MonoBehaviour
                 CardData data = new CardData(number, suit, 0);
                 Card card = cardPool.GetCard();
                 
-                int spriteIndex = suit * 13 + (number - 1);
-                card.Initialize(data, cardSprites[spriteIndex]);
+                card.Initialize(data);
                 
                 deckList.Add(card);
             }

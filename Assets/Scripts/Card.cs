@@ -25,7 +25,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     private Vector2 pointerOffset;
     private float originalY;
 
-    // Statik renk dizisi: Index 0 için beyaz (grupsuz), 1..8 için diğer renkler.
+    // Kart görselleri için renk dizisi: GroupID 0 için beyaz, sonrasında farklı renkler.
     private static readonly Color[] GroupColors = new Color[]
     {
         Color.white,    // GroupID 0
@@ -36,34 +36,38 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         Color.magenta,  // GroupID 5
         Color.yellow,   // GroupID 6
         Color.gray,     // GroupID 7
-        Color.black     // GroupID 8 (varsa)
+        Color.black     // GroupID 8
     };
 
     private void Awake()
     {
-        // Bileşenler yalnızca bir kere alınır.
         _image = GetComponent<Image>();
         _cachedRectTransform = GetComponent<RectTransform>();
     }
 
     public RectTransform CachedRectTransform => _cachedRectTransform;
 
-    public void Initialize(CardData cardData, Sprite sprite)
+    /// <summary>
+    /// CardData'yı atar ve CardAtlasManager üzerinden kart görselini çeker.
+    /// </summary>
+    public void Initialize(CardData cardData)
     {
         _cardData = cardData;
+        // Kart görselini atlas üzerinden alıyoruz.
+        Sprite sprite = CardAtlasManager.Instance.GetCardSprite(cardData.Suit, cardData.Number);
         _image.sprite = sprite;
+
+        // GPU instancing destekleyen materyal kullanıyorsanız, burada materyalin GPU instancing ayarlarının açık olduğundan emin olun.
     }
 
     public byte GetPoint()
     {
-        // 10'dan büyük değerler 10 olarak hesaplanır.
         return _cardData.Number > 10 ? (byte)10 : _cardData.Number;
     }
 
     public void SetGroupID(byte groupID)
     {
         _cardData.GroupID = groupID;
-        // Eğer tanımlı aralık dışıysa varsayılan olarak beyaz yap.
         _image.color = groupID < GroupColors.Length ? GroupColors[groupID] : Color.white;
     }
 
@@ -79,11 +83,8 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        // Y pozisyonunu cache'leyelim.
         originalY = _cachedRectTransform.anchoredPosition.y;
-        // Pointer offset'ini hesapla.
         RectTransformUtility.ScreenPointToLocalPointInRectangle(_cachedRectTransform, eventData.position, eventData.pressEventCamera, out pointerOffset);
-        // Drag sırasında en üstte görünmesi için sibling index'i son yap.
         _cachedRectTransform.SetAsLastSibling();
         _cachedRectTransform.DOKill();
     }
@@ -94,7 +95,6 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         RectTransform parentRect = _cachedRectTransform.parent as RectTransform;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, eventData.position, eventData.pressEventCamera, out localPoint))
         {
-            // Y sabit, sadece X değişir.
             float newX = localPoint.x - pointerOffset.x;
             _cachedRectTransform.anchoredPosition = new Vector2(newX, originalY);
         }
