@@ -9,6 +9,7 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private CardPool cardPool;
     [SerializeField] private Sprite[] cardSprites;
     [SerializeField] private RectTransform destinationPanel;
+    [SerializeField] private RectTransform StartPanel;
     
     public static BoardManager Instance;
     void Awake()
@@ -74,6 +75,7 @@ public class BoardManager : MonoBehaviour
     {
         RectTransform cardRect = card.GetComponent<RectTransform>();
         cardRect.SetParent(destinationPanel, false);
+        cardRect.anchoredPosition = new Vector2(StartPanel.anchoredPosition.x, StartPanel.anchoredPosition.y);
         cardRect.DOAnchorPos(Vector2.zero, .5f).SetEase(Ease.OutQuad);
     }
 }
