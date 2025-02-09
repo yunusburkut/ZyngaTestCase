@@ -1,264 +1,171 @@
 using NUnit.Framework;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using DG.Tweening;
-using System.Collections.Generic;
 
-public class MyDeckManagerSort10CardsTests
+public class GroupCalculator_SortingTests
 {
-    private GameObject deckManagerGO;
-    private MyDeckManager deckManager;
-
-    [SetUp]
-    public void SetUp()
+    private Card CreateTestCard(CardData data)
     {
-        // Test ortamı için MyDeckManager'ın bulunduğu GameObject oluşturuluyor.
-        deckManagerGO = new GameObject("DeckManager");
-        deckManager = deckManagerGO.AddComponent<MyDeckManager>();
-
-        // Singleton instance ayarlanıyor.
-        MyDeckManager.Instance = deckManager;
-    }
-
-    [TearDown]
-    public void TearDown()
-    {
-        Object.DestroyImmediate(deckManagerGO);
-        MyDeckManager.Instance = null;
-    }
-
-    // Yardımcı metod: Belirtilen number ve suit değerlerine sahip test kartı oluşturur.
-    private Card CreateTestCard(int number, int suit)
-    {
-        GameObject cardGO = new GameObject($"TestCard_{number}_{suit}");
-        // Kartların parent'ı, deckManagerGO olarak ayarlanıyor.
-        cardGO.transform.SetParent(deckManagerGO.transform);
-
-        // Gerekli component'lar ekleniyor.
-        cardGO.AddComponent<RectTransform>();
-        cardGO.AddComponent<Image>();
-        Card card = cardGO.AddComponent<Card>();
-
-        // Texture ve sprite oluştururken Rect'in texture boyutlarıyla uyumlu olduğuna dikkat ediyoruz.
-        Texture2D texture = new Texture2D(10, 10);
-        Sprite dummySprite = Sprite.Create(texture, new Rect(0, 0, 10, 10), new Vector2(0.5f, 0.5f));
-
-        CardData data = new CardData((byte)number, (byte)suit, 0);
-        card.Initialize(data, dummySprite);
-
+        GameObject go = new GameObject("TestCard");
+        go.AddComponent<Canvas>();
+        go.AddComponent<CanvasRenderer>();
+        go.AddComponent<Image>();
+        Card card = go.AddComponent<Card>();
+        card.SetCardData(data);
         return card;
     }
 
-    [Test]
-    public void SortAndRepositionDeckBySuitAscending_Sorts10CardsCorrectly()
+    private void ShuffleDeck<T>(List<T> list)
     {
-        /*
-         Oluşturulan 10 kart:
-         - Kart1: (7, 2)
-         - Kart2: (5, 1)
-         - Kart3: (9, 1)
-         - Kart4: (4, 3)
-         - Kart5: (3, 2)
-         - Kart6: (8, 1)
-         - Kart7: (2, 3)
-         - Kart8: (6, 2)
-         - Kart9: (10, 1)
-         - Kart10: (1, 3)
-         
-         Beklenen sıralama (önce suit, sonra number ascending):
-         Suit 1 kartları (sırasıyla): (5,1), (8,1), (9,1), (10,1)
-         Suit 2 kartları: (3,2), (6,2), (7,2)
-         Suit 3 kartları: (1,3), (2,3), (4,3)
-         
-         Dolayısıyla, beklenen nihai sıralama index'e göre:
-         Index 0: (5,1)
-         Index 1: (8,1)
-         Index 2: (9,1)
-         Index 3: (10,1)
-         Index 4: (3,2)
-         Index 5: (6,2)
-         Index 6: (7,2)
-         Index 7: (1,3)
-         Index 8: (2,3)
-         Index 9: (4,3)
-        */
-
-        // Kartları oluşturup ekliyoruz (oluşturma sırası karışık, sıralama metodunun işi sıralamak olacak).
-        Card card1 = CreateTestCard(7, 2);    // (7,2)
-        Card card2 = CreateTestCard(5, 1);    // (5,1)
-        Card card3 = CreateTestCard(9, 1);    // (9,1)
-        Card card4 = CreateTestCard(4, 3);    // (4,3)
-        Card card5 = CreateTestCard(3, 2);    // (3,2)
-        Card card6 = CreateTestCard(8, 1);    // (8,1)
-        Card card7 = CreateTestCard(2, 3);    // (2,3)
-        Card card8 = CreateTestCard(6, 2);    // (6,2)
-        Card card9 = CreateTestCard(10, 1);   // (10,1)
-        Card card10 = CreateTestCard(1, 3);   // (1,3)
-
-        // Kartlar, MyDeckManager'ın myDeck listesine ekleniyor.
-        deckManager.AddCard(card1);
-        deckManager.AddCard(card2);
-        deckManager.AddCard(card3);
-        deckManager.AddCard(card4);
-        deckManager.AddCard(card5);
-        deckManager.AddCard(card6);
-        deckManager.AddCard(card7);
-        deckManager.AddCard(card8);
-        deckManager.AddCard(card9);
-        deckManager.AddCard(card10);
-
-        // Sıralama metodunu çağırıyoruz.
-        deckManager.SortDeckByNumberThenSuit();
-
-        // deckManagerGO altındaki kartların sıralı hali, sibling index'e göre belirlenecektir.
-        Card[] cardsInParent = deckManagerGO.GetComponentsInChildren<Card>();
-        Assert.AreEqual(10, cardsInParent.Length, "Eklenen kart sayısı 10 olmalı.");
-
-        // Kartları sibling index'e göre sıralayalım.
-        List<(Card card, int siblingIndex)> cardIndices = new List<(Card, int)>();
-        foreach (var card in cardsInParent)
+        System.Random rnd = new System.Random();
+        int count = list.Count;
+        for (int i = count - 1; i > 0; i--)
         {
-            int sibIndex = card.transform.GetSiblingIndex();
-            cardIndices.Add((card, sibIndex));
+            int j = rnd.Next(i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
         }
-        cardIndices.Sort((a, b) => a.siblingIndex.CompareTo(b.siblingIndex));
+    }
 
-        // Beklenen sıralama:
-        // Index 0: (5,1)
-        // Index 1: (8,1)
-        // Index 2: (9,1)
-        // Index 3: (10,1)
-        // Index 4: (3,2)
-        // Index 5: (6,2)
-        // Index 6: (7,2)
-        // Index 7: (1,3)
-        // Index 8: (2,3)
-        // Index 9: (4,3)
-
-        // Sırasıyla kontrol edelim:
-        CardData[] expectedOrder = new CardData[10];
-        expectedOrder[0] = new CardData(5, 1, 0);
-        expectedOrder[1] = new CardData(8, 1, 1);
-        expectedOrder[2] = new CardData(9, 1, 1);
-        expectedOrder[3] = new CardData(10, 1, 1);
-        expectedOrder[4] = new CardData(3, 2, 0);
-        expectedOrder[5] = new CardData(6, 2, 0);
-        expectedOrder[6] = new CardData(7, 2, 0);
-        expectedOrder[7] = new CardData(1, 3, 0);
-        expectedOrder[8] = new CardData(2, 3, 0);
-        expectedOrder[9] = new CardData(4, 3, 0);
-
-        for (int i = 0; i < cardIndices.Count; i++)
+    [Test]
+    public void CalculateRun_SortsDeckAndAssignsGroupIDs_Correctly()
+    {
+       
+        List<Card> deck = new List<Card>
         {
-            CardData actual = cardIndices[i].card.GetCardData();
-            CardData expected = expectedOrder[i];
+            CreateTestCard(new CardData(8, 1, 0)),
+            CreateTestCard(new CardData(3, 1, 0)),
+            CreateTestCard(new CardData(10,2, 0)),
+            CreateTestCard(new CardData(2, 1, 0)),
+            CreateTestCard(new CardData(7, 1, 0)),
+            CreateTestCard(new CardData(4, 1, 0)),
+            CreateTestCard(new CardData(6, 1, 0)),
+            CreateTestCard(new CardData(9, 1, 0)),
+            CreateTestCard(new CardData(4, 2, 0)),
+            CreateTestCard(new CardData(7, 2, 0))
+        };
 
-            Assert.AreEqual(expected.GroupID, actual.GroupID, $"Index {i}: Beklenen Suit {expected.Suit} fakat bulundu {actual.Suit}");
-            Assert.AreEqual(expected.Suit, actual.Suit, $"Index {i}: Beklenen Suit {expected.Suit} fakat bulundu {actual.Suit}");
-            Assert.AreEqual(expected.Number, actual.Number, $"Index {i}: Beklenen Number {expected.Number} fakat bulundu {actual.Number}");
+        ShuffleDeck(deck);
+
+        GroupCalculator gc = new GroupCalculator();
+        gc.CalculateRun(deck);
+
+        int deckCount = deck.Count;
+        for (int i = 1; i < deckCount; i++)
+        {
+            CardData prev = deck[i - 1].GetCardData();
+            CardData curr = deck[i].GetCardData();
+            if (prev.Suit == curr.Suit)
+            {
+                Assert.LessOrEqual(prev.Number, curr.Number, $"Deck sıralaması hatalı: {prev.Number} > {curr.Number} (Suit {prev.Suit})");
+            }
+            else
+            {
+                Assert.Less(prev.Suit, curr.Suit, "Deck suit sıralaması hatalı.");
+            }
+        }
+
+        List<Card> suit1Cards = deck.FindAll(card => card.GetCardData().Suit == 1);
+        Assert.GreaterOrEqual(suit1Cards.Count, 7, "Suit 1 kart sayısı yetersiz.");
+
+        byte groupIdFirst = suit1Cards[0].GetCardData().GroupID;
+        Assert.AreNotEqual(0, groupIdFirst, "İlk run GroupID 0 olmamalı.");
+        Assert.AreEqual(2, suit1Cards[0].GetCardData().Number, "İlk runun ilk kartı 2 olmalı.");
+        Assert.AreEqual(3, suit1Cards[1].GetCardData().Number, "İlk runun ikinci kartı 3 olmalı.");
+        Assert.AreEqual(4, suit1Cards[2].GetCardData().Number, "İlk runun üçüncü kartı 4 olmalı.");
+
+        List<Card> suit2Cards = deck.FindAll(card => card.GetCardData().Suit == 2);
+        foreach (Card card in suit2Cards)
+        {
+            Assert.AreEqual(0, card.GetCardData().GroupID, $"Suit 2 kartı (number: {card.GetCardData().Number}) run'e dahil olmamalı.");
+        }
+
+        foreach (Card card in deck)
+        {
+            Object.DestroyImmediate(card.gameObject);
+        }
+    }
+
+    [Test]
+    public void CalculateSet_SortsDeckAndAssignsGroupIDs_Correctly()
+    {
+       
+        List<Card> deck = new List<Card>
+        {
+            CreateTestCard(new CardData(8, 1, 0)),
+            CreateTestCard(new CardData(8, 2, 0)),
+            CreateTestCard(new CardData(8, 3, 0)),
+            CreateTestCard(new CardData(3, 1, 0)),
+            CreateTestCard(new CardData(5, 1, 0)),
+            CreateTestCard(new CardData(7, 2, 0)),
+            CreateTestCard(new CardData(9, 2, 0)),
+            CreateTestCard(new CardData(2, 1, 0)),
+            CreateTestCard(new CardData(4, 1, 0)),
+            CreateTestCard(new CardData(10,2, 0))
+        };
+        
+        List<(byte number, byte suit)> expectedOrderSet = new List<(byte, byte)>
+        {
+            (2,1), (3,1), (4,1), (5,1), (7,2), (8,1), (8,2), (8,3), (9,2), (10,2)
+        };
+
+        ShuffleDeck(deck);
+
+        GroupCalculator gc = new GroupCalculator();
+        gc.CalculateSet(deck);
+
+        Assert.AreEqual(expectedOrderSet.Count, deck.Count, "Deck eleman sayısı beklenenle aynı olmalı.");
+        for (int i = 0; i < deck.Count; i++)
+        {
+            CardData data = deck[i].GetCardData();
+            Assert.AreEqual(expectedOrderSet[i].number, data.Number, $"Index {i}: Beklenen numara {expectedOrderSet[i].number}, bulundu {data.Number}");
+            Assert.AreEqual(expectedOrderSet[i].suit, data.Suit, $"Index {i}: Beklenen suit {expectedOrderSet[i].suit}, bulundu {data.Suit}");
+        }
+
+        List<Card> setCards = deck.FindAll(card => card.GetCardData().Number == 8);
+        Assert.AreEqual(3, setCards.Count, "Deck'te 8 numaralı 3 kart bulunmalı.");
+        foreach (Card card in setCards)
+        {
+            Assert.That(card.GetCardData().GroupID, Is.Not.EqualTo(0), $"8 numaralı kart meld'e dahil olmalı.");
+        }
+
+        List<Card> otherCards = deck.FindAll(card => card.GetCardData().Number != 8);
+        foreach (Card card in otherCards)
+        {
+            Assert.That(card.GetCardData().GroupID, Is.EqualTo(0), $"Numarası 8 olmayan kart meld'e dahil olmamalı.");
+        }
+        
+        foreach (Card card in deck)
+        {
+            Object.DestroyImmediate(card.gameObject);
         }
     }
     [Test]
-    public void SortAndRepositionDeckByNumberThenSuitAscending_Sorts10CardsCorrectly()
+    public void ComputeOptimalMelds_PerfectDeck_ReturnsZeroDeadwoodAndExpectedMeldCount()
     {
-        /*
-         Oluşturulan 10 kart:
-         - card1: (7, 2)
-         - card2: (5, 1)
-         - card3: (9, 1)
-         - card4: (4, 3)
-         - card5: (3, 2)
-         - card6: (8, 1)
-         - card7: (2, 3)
-         - card8: (6, 2)
-         - card9: (10, 1)
-         - card10: (1, 3)
-         
-         Beklenen sıralama (önce Number, sonra Suit ascending):
-         Index 0: (1, 3)   -> card10
-         Index 1: (2, 3)   -> card7
-         Index 2: (3, 2)   -> card5
-         Index 3: (4, 3)   -> card4
-         Index 4: (5, 1)   -> card2
-         Index 5: (6, 2)   -> card8
-         Index 6: (7, 2)   -> card1
-         Index 7: (8, 1)   -> card6
-         Index 8: (9, 1)   -> card3
-         Index 9: (10, 1)  -> card9
-        */
-
-        // Kartları oluşturup ekliyoruz (oluşturma sırası karışık, sıralama metodunun işi sıralamak olacak).
-        Card card1 = CreateTestCard(7, 2);    // (7,2)
-        Card card2 = CreateTestCard(5, 1);    // (5,1)
-        Card card3 = CreateTestCard(9, 1);    // (9,1)
-        Card card4 = CreateTestCard(4, 3);    // (4,3)
-        Card card5 = CreateTestCard(3, 2);    // (3,2)
-        Card card6 = CreateTestCard(8, 1);    // (8,1)
-        Card card7 = CreateTestCard(2, 3);    // (2,3)
-        Card card8 = CreateTestCard(6, 2);    // (6,2)
-        Card card9 = CreateTestCard(10, 1);   // (10,1)
-        Card card10 = CreateTestCard(1, 3);   // (1,3)
-
-        // Kartlar, MyDeckManager'ın myDeck listesine ekleniyor.
-        deckManager.AddCard(card1);
-        deckManager.AddCard(card2);
-        deckManager.AddCard(card3);
-        deckManager.AddCard(card4);
-        deckManager.AddCard(card5);
-        deckManager.AddCard(card6);
-        deckManager.AddCard(card7);
-        deckManager.AddCard(card8);
-        deckManager.AddCard(card9);
-        deckManager.AddCard(card10);
-
-        // Sıralama metodunu çağırıyoruz.
-        deckManager.SortDeckBySuitThenNumber();
-
-        // deckManagerGO altındaki kartların sıralı hali, sibling index'e göre belirlenecektir.
-        Card[] cardsInParent = deckManagerGO.GetComponentsInChildren<Card>();
-        Assert.AreEqual(10, cardsInParent.Length, "Eklenen kart sayısı 10 olmalı.");
-
-        // Kartları sibling index'e göre sıralayalım.
-        List<(Card card, int siblingIndex)> cardIndices = new List<(Card, int)>();
-        foreach (var card in cardsInParent)
+        List<Card> deck = new List<Card>
         {
-            int sibIndex = card.transform.GetSiblingIndex();
-            cardIndices.Add((card, sibIndex));
-        }
-        cardIndices.Sort((a, b) => a.siblingIndex.CompareTo(b.siblingIndex));
+            CreateTestCard(new CardData(3, 1, 0)),
+            CreateTestCard(new CardData(4, 1, 0)),
+            CreateTestCard(new CardData(5, 1, 0)),
+            CreateTestCard(new CardData(7, 1, 0)),
+            CreateTestCard(new CardData(7, 2, 0)),
+            CreateTestCard(new CardData(7, 3, 0)),
+            CreateTestCard(new CardData(8, 3, 0)),
+            CreateTestCard(new CardData(9, 3, 0)),
+            CreateTestCard(new CardData(2, 1, 0)),
+            CreateTestCard(new CardData(7, 4, 0))
+        };
 
-        // Beklenen sıralama:
-        // Index 0: (1,3)   -> card10
-        // Index 1: (2,3)   -> card7
-        // Index 2: (3,2)   -> card5
-        // Index 3: (4,3)   -> card4
-        // Index 4: (5,1)   -> card2
-        // Index 5: (6,2)   -> card8
-        // Index 6: (7,2)   -> card1
-        // Index 7: (8,1)   -> card6
-        // Index 8: (9,1)   -> card3
-        // Index 9: (10,1)  -> card9
+        MeldOptimizer optimizer = new MeldOptimizer();
+        MeldOptimizer.OptimalResult result = optimizer.ComputeOptimalMelds(deck);
 
-        // Beklenen sıralamayı CardData üzerinden tanımlayalım:
-        CardData[] expectedOrder = new CardData[10];
-        expectedOrder[0] = new CardData(1, 3, 0);
-        expectedOrder[1] = new CardData(2, 3, 0);
-        expectedOrder[2] = new CardData(3, 2, 0);
-        expectedOrder[3] = new CardData(4, 3, 0);
-        expectedOrder[4] = new CardData(5, 1, 0);
-        expectedOrder[5] = new CardData(6, 2, 0);
-        expectedOrder[6] = new CardData(7, 2, 0);
-        expectedOrder[7] = new CardData(8, 1, 0);
-        expectedOrder[8] = new CardData(9, 1, 0);
-        expectedOrder[9] = new CardData(10, 1, 0);
+        Assert.AreEqual(0, result.Deadwood, "Optimal deadwood should be 0 for a perfect deck.");
+        Assert.AreEqual(3, result.Melds.Count, "Expected meld count is 2 for a perfect deck.");
 
-        for (int i = 0; i < cardIndices.Count; i++)
+        foreach (Card card in deck)
         {
-            CardData actual = cardIndices[i].card.GetCardData();
-            CardData expected = expectedOrder[i];
-
-            Assert.AreEqual(expected.Number, actual.Number, $"Index {i}: Beklenen Number {expected.Number} fakat bulundu {actual.Number}");
-            Assert.AreEqual(expected.Suit, actual.Suit, $"Index {i}: Beklenen Suit {expected.Suit} fakat bulundu {actual.Suit}");
+            Object.DestroyImmediate(card.gameObject);
         }
     }
 }
