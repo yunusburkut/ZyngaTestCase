@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 public class GroupCalculator
 {
@@ -86,6 +87,7 @@ public class GroupCalculator
                 index++;
             }
         }
+        Debug.Log("Deadwood : " + CalculateDeadwood(deck));
     }
 
     public void CalculateSet(List<Card> deck)
@@ -113,6 +115,7 @@ public class GroupCalculator
                 index++;
             }
         }
+        Debug.Log("Deadwood" + CalculateDeadwood(deck));
     }
 
     // Run zincir uzunluğunu hesaplar. Eğer GetCardData() metodunun her çağrısı yeni nesne oluşturuyorsa,
@@ -132,7 +135,17 @@ public class GroupCalculator
         }
         return chainLength;
     }
-
+    public int CalculateDeadwood(List<Card> deck)
+    {
+        int deadwood = 0;
+        int n = deck.Count;
+        for (int i = 0; i < n; i++)
+        {
+            if (deck[i].GetCardData().GroupID == 0)
+                deadwood += deck[i].GetPoint();
+        }
+        return deadwood;
+    }
     // Set zincir uzunluğunu hesaplar.
     private static int GetSetChainLength(List<Card> deck, int startIndex, int n, int targetNumber)
     {
