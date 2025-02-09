@@ -87,7 +87,7 @@ public class GroupCalculator
                 index++;
             }
         }
-        Debug.Log("Deadwood : " + CalculateDeadwood(deck));
+        CalculateDeadwood(deck);
     }
 
     public void CalculateSet(List<Card> deck)
@@ -115,7 +115,7 @@ public class GroupCalculator
                 index++;
             }
         }
-        Debug.Log("Deadwood" + CalculateDeadwood(deck));
+        CalculateDeadwood(deck);
     }
 
     // Run zincir uzunluğunu hesaplar. Eğer GetCardData() metodunun her çağrısı yeni nesne oluşturuyorsa,
@@ -144,6 +144,7 @@ public class GroupCalculator
             if (deck[i].GetCardData().GroupID == 0)
                 deadwood += deck[i].GetPoint();
         }
+        Debug.Log("Deadwood : " + deadwood);
         return deadwood;
     }
     // Set zincir uzunluğunu hesaplar.
