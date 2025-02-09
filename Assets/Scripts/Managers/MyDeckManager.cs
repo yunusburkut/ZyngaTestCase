@@ -38,6 +38,7 @@ public class MyDeckManager : MonoBehaviour
         {
             myDeck.Add(card);
             UpdateDeckLayout();
+            UpdateDeadwoodUI(groupCalculator.CalculateDeadwood(myDeck));
         }
     }
 
@@ -78,8 +79,7 @@ public class MyDeckManager : MonoBehaviour
         layoutController.RepositionDpGroupedCardsLeftAligned(myDeck);
         
     }
-
-  
+    
     public void ComputeOptimalMelds()
     {
         MeldOptimizer.OptimalResult result = meldOptimizer.ComputeOptimalMelds(myDeck);

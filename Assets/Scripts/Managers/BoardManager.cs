@@ -69,6 +69,7 @@ public class BoardManager : MonoBehaviour
         Card card = deckStack.Pop();
         SendDrawedCardToDeck(card);
         MyDeckManager.Instance.AddCard(card);
+        
     }
 
     public void SendDrawedCardToDeck(Card card)

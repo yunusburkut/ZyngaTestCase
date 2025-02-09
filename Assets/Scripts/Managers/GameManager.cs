@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
             BoardManager.Instance.DrawCard();
             yield return new WaitForSeconds(drawDelay);
         }
+        
         Debug.Log("Tüm kartlar dağıtıldı.");
     }
 }
