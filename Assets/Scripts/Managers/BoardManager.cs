@@ -24,9 +24,13 @@ public class BoardManager : MonoBehaviour
     }
     private void Start()
     {
-        CreateAndShuffleDeck();
+        
     }
 
+    public void Init()
+    {
+        CreateAndShuffleDeck();
+    }
     private void CreateAndShuffleDeck()
     {
         for (byte suit = 0; suit < 4; suit++)
