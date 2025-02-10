@@ -26,7 +26,6 @@ public class MyDeckManager : MonoBehaviour
         else
             Destroy(gameObject);
 
-        // Bağımlılıklar constructor aracılığıyla veya burada initialize ediliyor.
         layoutController = new CardLayoutController(cardSpacing, shiftDuration, spacing, moveDuration);
         groupCalculator = new GroupCalculator();
         meldOptimizer = new MeldOptimizer();

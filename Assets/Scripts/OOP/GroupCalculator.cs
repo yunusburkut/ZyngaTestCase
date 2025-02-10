@@ -7,7 +7,6 @@ public class GroupCalculator
     public void MarkGroups(List<Card> deck)
     {
         int n = deck.Count;
-        // Tüm kartların GroupID'sini sıfırla.
         for (int i = 0; i < n; i++)
             deck[i].SetGroupID(0);
 
@@ -17,13 +16,10 @@ public class GroupCalculator
         {
             bool grouped = false;
             Card current = deck[index];
-            // currentData'yi bir kere alıyoruz.
             CardData currentData = current.GetCardData();
 
-            // Run kontrolü: Aynı suit içinde ardışık kartlar
             if (index < n - 1)
             {
-                // Önceki değeri alıp karşılaştırıyoruz.
                 CardData nextData = deck[index + 1].GetCardData();
                 if (currentData.Suit == nextData.Suit)
                 {
@@ -39,7 +35,6 @@ public class GroupCalculator
                     }
                 }
             }
-            // Set kontrolü: Aynı numaralı kartlar
             if (!grouped && index < n - 1)
             {
                 int targetNumber = currentData.Number;
@@ -65,7 +60,6 @@ public class GroupCalculator
     {
         deck.Sort(CardComparer.CompareBySuitThenNumber);
         int n = deck.Count;
-        // Sıfırlama işlemini minimal GC etkisiyle yapalım.
         for (int i = 0; i < n; i++)
             deck[i].SetGroupID(0);
 
@@ -73,7 +67,6 @@ public class GroupCalculator
         int index = 0;
         while (index < n)
         {
-            // currentData'yi bir kere alıyoruz.
             CardData currentData = deck[index].GetCardData();
             int chainLength = GetRunChainLength(deck, index, n, currentData.Suit, currentData.Number);
             if (chainLength >= 3)
@@ -119,8 +112,6 @@ public class GroupCalculator
         CalculateDeadwood(deck);
     }
 
-    // Run zincir uzunluğunu hesaplar. Eğer GetCardData() metodunun her çağrısı yeni nesne oluşturuyorsa,
-    // bu değerleri lokal değişkende saklamak GC baskısını azaltır.
     private static int GetRunChainLength(List<Card> deck, int startIndex, int n, int suit, int startNumber)
     {
         int chainLength = 1;
@@ -153,7 +144,6 @@ public class GroupCalculator
     {
         return deadwood;
     }
-    // Set zincir uzunluğunu hesaplar.
     private static int GetSetChainLength(List<Card> deck, int startIndex, int n, int targetNumber)
     {
         int chainLength = 1;

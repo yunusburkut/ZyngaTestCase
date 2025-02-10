@@ -25,7 +25,6 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     private Vector2 pointerOffset;
     private float originalY;
 
-    // Kart görselleri için renk dizisi: GroupID 0 için beyaz, sonrasında farklı renkler.
     private static readonly Color[] GroupColors = new Color[]
     {
         Color.white,    // GroupID 0
@@ -47,17 +46,12 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
     public RectTransform CachedRectTransform => _cachedRectTransform;
 
-    /// <summary>
-    /// CardData'yı atar ve CardAtlasManager üzerinden kart görselini çeker.
-    /// </summary>
     public void Initialize(CardData cardData)
     {
         _cardData = cardData;
-        // Kart görselini atlas üzerinden alıyoruz.
         Sprite sprite = CardAtlasManager.Instance.GetCardSprite(cardData.Suit, cardData.Number);
         _image.sprite = sprite;
 
-        // GPU instancing destekleyen materyal kullanıyorsanız, burada materyalin GPU instancing ayarlarının açık olduğundan emin olun.
     }
 
     public byte GetPoint()
