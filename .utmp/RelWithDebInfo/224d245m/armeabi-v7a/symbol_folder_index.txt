@@ -1,0 +1,1 @@
+D:\GitWs\ZyngaTestCase\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\build\intermediates\cxx\RelWithDebInfo\224d245m\obj\armeabi-v7a
