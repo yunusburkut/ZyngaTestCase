@@ -4,6 +4,16 @@ using UnityEngine.SceneManagement;
 
 public class LevelLoader : MonoBehaviour
 {
+    public void StartGame()
+    {
+        StartCoroutine(StartAnim());
+    }
+
+    private IEnumerator StartAnim()
+    {
+        
+        yield return null;
+    }
     public void LoadLevel(int sceneIndex)
     {
         StartCoroutine(LoadAsynchronously(sceneIndex));
